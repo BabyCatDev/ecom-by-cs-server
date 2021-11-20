@@ -48,6 +48,28 @@ router.get("/user", auth, async (req, res) => {
   res.send(req.user);
 });
 
+//get users
+router.get("/users", auth, async (req, res) => {
+  const type = req.query.type;
+  if (req.user.type === "Administrateur") {
+    try {
+      const users = await User.find({
+        type: {
+          $eq: type
+        }
+      }).sort({ createdAt: -1 });
+      if (!users) {
+        return res.status(404).send();
+      }
+      res.send(users);
+    } catch (e) {
+      res.status(500).send();
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
 // //Update My Profile
 // router.patch('/user/me', auth, async (req, res) => {
 //   const { fullName, country, city, age, sexe, isCompleted } = req.body
