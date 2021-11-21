@@ -54,6 +54,12 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
+    orders: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Order"
+      }
+    ],
     tokens: [
       {
         token: {
