@@ -50,14 +50,9 @@ router.get("/user", auth, async (req, res) => {
 
 //get users
 router.get("/users", auth, async (req, res) => {
-  const type = req.query.type;
   if (req.user.type === "Administrateur") {
     try {
-      const users = await User.find({
-        type: {
-          $eq: type
-        }
-      }).sort({ createdAt: -1 });
+      const users = await User.find().sort({ createdAt: -1 });
       if (!users) {
         return res.status(404).send();
       }
