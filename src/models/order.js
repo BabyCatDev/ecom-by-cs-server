@@ -22,6 +22,10 @@ const orderSchema = new mongoose.Schema(
       default: "Waiting",
       max: 50
     },
+    deliveryFeedback: {
+      type: String,
+      max: 70
+    },
     deliveryDate: {
       type: Date,
       required: true
