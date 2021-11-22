@@ -50,7 +50,7 @@ router.get("/user", auth, async (req, res) => {
 
 //get users
 router.get("/users", auth, async (req, res) => {
-  if (req.user.type === "Administrateur") {
+  if (req.user.type === "Administrateur" || req.user.type === "Commercial") {
     try {
       const users = await User.find().sort({ createdAt: -1 });
       if (!users) {

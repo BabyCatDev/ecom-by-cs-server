@@ -22,7 +22,7 @@ router.post("/company", auth, async (req, res) => {
 
 //get companies
 router.get("/companies", auth, async (req, res) => {
-  if (req.user.type === "Administrateur") {
+  if (req.user.type === "Administrateur" || req.user.type === "Commercial") {
     try {
       const companies = await Company.find()
         .populate({ path: "products" })
