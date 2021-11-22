@@ -115,10 +115,12 @@ router.get("/deliveryorders", auth, async (req, res) => {
         }
       })
         .populate({
-          path: "products"
+          path: "products",
+          populate: { path: "product", model: "Product" }
         })
         .populate({
-          path: "seller"
+          path: "seller",
+          select: "fullName phone email place"
         })
         .sort({ createdAt: -1 });
       if (!orders) {
