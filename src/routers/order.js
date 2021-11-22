@@ -1,6 +1,7 @@
 const express = require("express");
 const User = require("../models/user");
 const Order = require("../models/order");
+const OrderDetail = require("../models/orderDetail");
 const auth = require("../middleware/auth");
 
 const router = new express.Router();
@@ -8,8 +9,43 @@ const router = new express.Router();
 //Create order
 router.post("/order", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
-    const order = new Order({ ...req.body, seller: req.user._id });
-    const delivery = req.body.delivery;
+    const {
+      clientName,
+      clientPhone,
+      clientAddress,
+      deliveryDate,
+      delivery,
+      productsDetails
+    } = req.body;
+    const products = [];
+
+    //Creating orderDetails
+    const promises = productsDetails.map(async (item, i) => {
+      const orderTemp = new OrderDetail({
+        product: item.productId,
+        quantity: item.quantity
+      });
+
+      try {
+        const result = await orderTemp.save();
+        products.push(result._id);
+      } catch (e) {
+        console.log(e);
+      }
+    });
+    await Promise.all(promises);
+
+    //Creating order with orderDetail items
+    const order = new Order({
+      products,
+      clientName,
+      clientPhone,
+      clientAddress,
+      deliveryDate,
+      delivery,
+      products,
+      seller: req.user._id
+    });
     try {
       const result = await order.save();
       await User.updateOne(
@@ -50,10 +86,12 @@ router.get("/sellerorders", auth, async (req, res) => {
         }
       })
         .populate({
-          path: "products"
+          path: "products",
+          populate: { path: "product", model: "Product" }
         })
         .populate({
-          path: "delivery"
+          path: "delivery",
+          select: "fullName phone email place"
         })
         .sort({ createdAt: -1 });
       if (!orders) {

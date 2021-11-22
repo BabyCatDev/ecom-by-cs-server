@@ -19,7 +19,7 @@ const orderSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      default: "Waiting",
+      default: "Delivering",
       max: 50
     },
     deliveryFeedback: {
@@ -43,7 +43,7 @@ const orderSchema = new mongoose.Schema(
     products: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
+        ref: "OrderDetail",
         required: true
       }
     ]
