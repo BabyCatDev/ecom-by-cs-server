@@ -33,4 +33,21 @@ router.post("/product", auth, async (req, res) => {
   }
 });
 
+//Get products
+router.get("/products", auth, async (req, res) => {
+  if (req.user.type === "Administrateur") {
+    try {
+      const products = await Product.find().sort({ createdAt: -1 });
+      if (!products) {
+        return res.status(404).send();
+      }
+      res.send(products);
+    } catch (e) {
+      res.status(500).send();
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
 module.exports = router;
