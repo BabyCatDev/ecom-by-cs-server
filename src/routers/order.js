@@ -218,10 +218,8 @@ router.get("/deliverystats", auth, async (req, res) => {
           $eq: "Hold"
         }
       }).count();
-
-      res
-        .status(200)
-        .send({ totalOrders, failedOrders, succeedOrders, holdOrders });
+      const stats = { totalOrders, failedOrders, succeedOrders, holdOrders };
+      res.status(200).send(stats);
     } catch (e) {
       console.log(e);
       res.status(500).send();
