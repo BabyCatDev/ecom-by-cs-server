@@ -43,7 +43,6 @@ router.post("/order", auth, async (req, res) => {
       clientAddress,
       deliveryDate,
       delivery,
-      products,
       seller: req.user._id
     });
     try {
@@ -109,9 +108,14 @@ router.get("/sellerorders", auth, async (req, res) => {
 router.get("/deliveryorders", auth, async (req, res) => {
   if (req.user.type === "Livreur") {
     try {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const orders = await Order.find({
         delivery: {
           $eq: req.user._id
+        },
+        deliveryDate: {
+          $eq: today
         }
       })
         .populate({
@@ -127,6 +131,97 @@ router.get("/deliveryorders", auth, async (req, res) => {
         return res.status(404).send();
       }
       res.send(orders);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send();
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
+//delivery guy feedback for an order, if it's delivery or failed
+
+router.patch("/delivery/:id", auth, async (req, res) => {
+  if (req.user.type === "Livreur") {
+    try {
+      const { status, deliveryFeedback } = req.body;
+      const orderId = req.params.id;
+      const order = await Order.updateOne(
+        {
+          _id: orderId
+        },
+        {
+          $set: {
+            status: status,
+            deliveryFeedback: deliveryFeedback
+          }
+        }
+      );
+      res.send(order);
+    } catch (e) {
+      res.status(400).send(e);
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
+//delivery guy stats
+// total, success, failed, hold orders
+
+router.get("/deliverystats", auth, async (req, res) => {
+  if (req.user.type === "Livreur") {
+    try {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const totalOrders = await Order.find({
+        delivery: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $eq: today
+        }
+      }).count();
+
+      const failedOrders = await Order.find({
+        delivery: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $eq: today
+        },
+        status: {
+          $eq: "Failed"
+        }
+      }).count();
+
+      const succeedOrders = await Order.find({
+        delivery: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $eq: today
+        },
+        status: {
+          $eq: "Succeed"
+        }
+      }).count();
+      const holdOrders = await Order.find({
+        delivery: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $eq: today
+        },
+        status: {
+          $eq: "Hold"
+        }
+      }).count();
+
+      res
+        .status(200)
+        .send({ totalOrders, failedOrders, succeedOrders, holdOrders });
     } catch (e) {
       console.log(e);
       res.status(500).send();

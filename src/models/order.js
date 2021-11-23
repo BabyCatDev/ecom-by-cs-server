@@ -19,7 +19,7 @@ const orderSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      default: "Delivering",
+      default: "Hold",
       max: 50
     },
     deliveryFeedback: {
