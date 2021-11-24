@@ -110,12 +110,18 @@ router.get("/deliveryorders", auth, async (req, res) => {
     try {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1
+      );
       const orders = await Order.find({
         delivery: {
           $eq: req.user._id
         },
         deliveryDate: {
-          $eq: today
+          $gte: today,
+          $lt: tomorrow
         }
       })
         .populate({
