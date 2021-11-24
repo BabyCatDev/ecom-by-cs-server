@@ -79,9 +79,20 @@ router.post("/order", auth, async (req, res) => {
 router.get("/sellerorders", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
     try {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1
+      );
       const orders = await Order.find({
         seller: {
           $eq: req.user._id
+        },
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
         }
       })
         .populate({
