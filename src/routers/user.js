@@ -65,6 +65,31 @@ router.get("/users", auth, async (req, res) => {
   }
 });
 
+//update Password
+router.patch("/user/:id", auth, async (req, res) => {
+  if (req.user.type === "Administrateur") {
+    const { password } = req.body;
+    const { id } = req.params;
+    //find user
+    User.findOne({ _id: id }).then(user => {
+      //Set the new password
+      user.password = password;
+
+      // Save
+      user.save(err => {
+        if (err) return res.status(500).json({ message: err.message });
+
+        res
+          .status(200)
+          .json({ message: "The password of this user has been updated." });
+      });
+    });
+    res.status(200).send(user);
+  } else {
+    res.status(403).send();
+  }
+});
+
 // //Update My Profile
 // router.patch('/user/me', auth, async (req, res) => {
 //   const { fullName, country, city, age, sexe, isCompleted } = req.body
