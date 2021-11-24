@@ -181,12 +181,18 @@ router.get("/deliverystats", auth, async (req, res) => {
     try {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1
+      );
       const totalOrders = await Order.find({
         delivery: {
           $eq: req.user._id
         },
         deliveryDate: {
-          $eq: today
+          $gte: today,
+          $lt: tomorrow
         }
       }).count();
 
@@ -195,7 +201,8 @@ router.get("/deliverystats", auth, async (req, res) => {
           $eq: req.user._id
         },
         deliveryDate: {
-          $eq: today
+          $gte: today,
+          $lt: tomorrow
         },
         status: {
           $eq: "Failed"
@@ -207,7 +214,8 @@ router.get("/deliverystats", auth, async (req, res) => {
           $eq: req.user._id
         },
         deliveryDate: {
-          $eq: today
+          $gte: today,
+          $lt: tomorrow
         },
         status: {
           $eq: "Succeed"
@@ -218,7 +226,8 @@ router.get("/deliverystats", auth, async (req, res) => {
           $eq: req.user._id
         },
         deliveryDate: {
-          $eq: today
+          $gte: today,
+          $lt: tomorrow
         },
         status: {
           $eq: "Hold"
