@@ -17,10 +17,12 @@ const userSchema = new mongoose.Schema(
       unique: true,
       max: 20
     },
-    phone: {
-      type: String,
-      max: 20
-    },
+    phones: [
+      {
+        type: String,
+        max: 20
+      }
+    ],
     place: {
       type: String,
       max: 150

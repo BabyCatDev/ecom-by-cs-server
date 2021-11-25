@@ -26,6 +26,10 @@ const orderSchema = new mongoose.Schema(
       type: String,
       max: 70
     },
+    comments: {
+      type: String,
+      max: 120
+    },
     deliveryDate: {
       type: Date,
       required: true
