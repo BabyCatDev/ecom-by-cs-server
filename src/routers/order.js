@@ -153,6 +153,7 @@ router.get("/sellerreports", auth, async (req, res) => {
     res.status(403).send();
   }
 });
+
 router.get("/deliveryorders", auth, async (req, res) => {
   if (req.user.type === "Livreur") {
     try {
@@ -242,7 +243,8 @@ router.get("/deliverystats", auth, async (req, res) => {
         deliveryDate: {
           $gte: today,
           $lt: tomorrow
-        }
+        },
+        status: { $ne: "Reported" }
       }).count();
 
       const failedOrders = await Order.find({
@@ -310,7 +312,8 @@ router.get("/sellerstats", auth, async (req, res) => {
         deliveryDate: {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
-        }
+        },
+        status: { $ne: "Reported" }
       }).count();
 
       const failedOrders = await Order.find({
@@ -384,7 +387,8 @@ router.get("/sellerstats", auth, async (req, res) => {
         deliveryDate: {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
-        }
+        },
+        status: { $ne: "Reported" }
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }
