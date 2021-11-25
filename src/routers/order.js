@@ -98,7 +98,39 @@ router.get("/sellerorders", auth, async (req, res) => {
         deliveryDate: {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
-        }
+        },
+        status: { $ne: "Reported" }
+      })
+        .populate({
+          path: "products",
+          populate: { path: "product", model: "Product" }
+        })
+        .populate({
+          path: "delivery",
+          select: "fullName phones email place"
+        })
+        .sort({ createdAt: -1 });
+      if (!orders) {
+        return res.status(404).send();
+      }
+      res.send(orders);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send();
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
+router.get("/sellerreports", auth, async (req, res) => {
+  if (req.user.type === "Commercial") {
+    try {
+      const orders = await Order.find({
+        seller: {
+          $eq: req.user._id
+        },
+        status: { $eq: "Reported" }
       })
         .populate({
           path: "products",
@@ -138,7 +170,8 @@ router.get("/deliveryorders", auth, async (req, res) => {
         deliveryDate: {
           $gte: today,
           $lt: tomorrow
-        }
+        },
+        status: { $ne: "Reported" }
       })
         .populate({
           path: "products",
