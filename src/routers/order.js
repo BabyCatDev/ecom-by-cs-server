@@ -3,6 +3,7 @@ const User = require("../models/user");
 const Order = require("../models/order");
 const OrderDetail = require("../models/orderDetail");
 const auth = require("../middleware/auth");
+const dayjs = require("dayjs");
 
 const router = new express.Router();
 
@@ -20,6 +21,8 @@ router.post("/order", auth, async (req, res) => {
     } = req.body;
     const products = [];
 
+    const parsedDeliveryDay = dayjs(deliveryDate);
+    const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
     //Creating orderDetails
     const promises = productsDetails.map(async (item, i) => {
       const orderTemp = new OrderDetail({
@@ -35,7 +38,6 @@ router.post("/order", auth, async (req, res) => {
       }
     });
     await Promise.all(promises);
-
     //Creating order with orderDetail items
     const order = new Order({
       products,
@@ -45,6 +47,7 @@ router.post("/order", auth, async (req, res) => {
       deliveryDate,
       delivery,
       comments,
+      status: datesDifference === 0 ? "Hold" : "Reported",
       seller: req.user._id
     });
     try {
