@@ -81,6 +81,33 @@ router.post("/order", auth, async (req, res) => {
   }
 });
 
+//Postpone order
+
+router.patch("/order/:id", auth, async (req, res) => {
+  if (req.user.type === "Commercial") {
+    try {
+      const { status, deliveryDate } = req.body;
+      const orderId = req.params.id;
+      const order = await Order.updateOne(
+        {
+          _id: orderId
+        },
+        {
+          $set: {
+            status: status,
+            deliveryDate: deliveryDate
+          }
+        }
+      );
+      res.send(order);
+    } catch (e) {
+      res.status(400).send(e);
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
 router.get("/sellerorders", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
     try {
