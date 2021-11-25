@@ -15,7 +15,8 @@ router.post("/order", auth, async (req, res) => {
       clientAddress,
       deliveryDate,
       delivery,
-      productsDetails
+      productsDetails,
+      comments
     } = req.body;
     const products = [];
 
@@ -43,6 +44,7 @@ router.post("/order", auth, async (req, res) => {
       clientAddress,
       deliveryDate,
       delivery,
+      comments,
       seller: req.user._id
     });
     try {
