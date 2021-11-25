@@ -103,7 +103,7 @@ router.get("/sellerorders", auth, async (req, res) => {
         })
         .populate({
           path: "delivery",
-          select: "fullName phone email place"
+          select: "fullName phones email place"
         })
         .sort({ createdAt: -1 });
       if (!orders) {
@@ -143,7 +143,7 @@ router.get("/deliveryorders", auth, async (req, res) => {
         })
         .populate({
           path: "seller",
-          select: "fullName phone email place"
+          select: "fullName phones email place"
         })
         .sort({ createdAt: -1 });
       if (!orders) {
