@@ -12,7 +12,7 @@ router.post("/order", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
     const {
       clientName,
-      clientPhone,
+      clientPhones,
       clientAddress,
       deliveryDate,
       delivery,
@@ -42,7 +42,7 @@ router.post("/order", auth, async (req, res) => {
     const order = new Order({
       products,
       clientName,
-      clientPhone,
+      clientPhones,
       clientAddress,
       deliveryDate,
       delivery,

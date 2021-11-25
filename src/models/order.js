@@ -7,11 +7,12 @@ const orderSchema = new mongoose.Schema(
       required: true,
       max: 30
     },
-    clientPhone: {
-      type: String,
-      required: true,
-      max: 20
-    },
+    clientPhones: [
+      {
+        type: String,
+        max: 20
+      }
+    ],
     clientAddress: {
       type: String,
       required: true,
