@@ -86,7 +86,7 @@ router.post("/order", auth, async (req, res) => {
 router.patch("/order/:id", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
     try {
-      const { status, deliveryDate } = req.body;
+      const { status, deliveryDate, deliveryFeedback } = req.body;
       const orderId = req.params.id;
       const order = await Order.updateOne(
         {
@@ -95,7 +95,8 @@ router.patch("/order/:id", auth, async (req, res) => {
         {
           $set: {
             status: status,
-            deliveryDate: deliveryDate
+            deliveryDate: deliveryDate,
+            deliveryFeedback: deliveryFeedback
           }
         }
       );
