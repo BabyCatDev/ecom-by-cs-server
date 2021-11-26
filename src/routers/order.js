@@ -516,7 +516,7 @@ router.get("/adminstats", auth, async (req, res) => {
           $lt: tomorrow
         },
         status: {
-          $eq: "Succeed"
+          $eq: "Failed"
         }
       }).populate({
         path: "products",
