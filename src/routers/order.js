@@ -323,8 +323,8 @@ router.get("/deliverystats", auth, async (req, res) => {
   }
 });
 
-router.get("/sellerstats", auth, async (req, res) => {
-  if (req.user.type === "Commercial") {
+router.get("/adminstats", auth, async (req, res) => {
+  if (req.user.type === "Administrateur") {
     try {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -334,23 +334,17 @@ router.get("/sellerstats", auth, async (req, res) => {
         now.getDate() + 1
       );
       const totalOrders = await Order.find({
-        seller: {
-          $eq: req.user._id
-        },
         deliveryDate: {
-          $gte: req.query.fromDate || today,
-          $lt: req.query.toDate || tomorrow
+          $gte: today,
+          $lt: tomorrow
         },
         status: { $ne: "Reported" }
       }).count();
 
       const failedOrders = await Order.find({
-        seller: {
-          $eq: req.user._id
-        },
         deliveryDate: {
-          $gte: req.query.fromDate || today,
-          $lt: req.query.toDate || tomorrow
+          $gte: today,
+          $lt: tomorrow
         },
         status: {
           $eq: "Failed"
@@ -358,37 +352,19 @@ router.get("/sellerstats", auth, async (req, res) => {
       }).count();
 
       const succeedOrders = await Order.find({
-        seller: {
-          $eq: req.user._id
-        },
         deliveryDate: {
-          $gte: req.query.fromDate || today,
-          $lt: req.query.toDate || tomorrow
+          $gte: today,
+          $lt: tomorrow
         },
         status: {
           $eq: "Succeed"
         }
       }).count();
-      const holdOrders = await Order.find({
-        seller: {
-          $eq: req.user._id
-        },
+
+      const turnoverRealizedData = await Order.find({
         deliveryDate: {
-          $gte: req.query.fromDate || today,
-          $lt: req.query.toDate || tomorrow
-        },
-        status: {
-          $eq: "Hold"
-        }
-      }).count();
-      //Realized income
-      const realizedIncomeData = await Order.find({
-        seller: {
-          $eq: req.user._id
-        },
-        deliveryDate: {
-          $gte: req.query.fromDate || today,
-          $lt: req.query.toDate || tomorrow
+          $gte: today,
+          $lt: tomorrow
         },
         status: {
           $eq: "Succeed"
@@ -397,7 +373,7 @@ router.get("/sellerstats", auth, async (req, res) => {
         path: "products",
         populate: { path: "product", model: "Product" }
       });
-      const realizedIncome = realizedIncomeData.reduce(
+      const turnoverRealized = turnoverRealizedData.reduce(
         (acc, order) =>
           acc +
           order.products.reduce(
@@ -406,22 +382,19 @@ router.get("/sellerstats", auth, async (req, res) => {
           ),
         0
       );
-      const averageIncome = realizedIncome / totalOrders;
-      //Potential income
-      const potentialIncomeData = await Order.find({
-        seller: {
-          $eq: req.user._id
-        },
+      const failedTurnoverData = await Order.find({
         deliveryDate: {
-          $gte: req.query.fromDate || today,
-          $lt: req.query.toDate || tomorrow
+          $gte: today,
+          $lt: tomorrow
         },
-        status: { $ne: "Reported" }
+        status: {
+          $eq: "Succeed"
+        }
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }
       });
-      const potentialIncome = potentialIncomeData.reduce(
+      const failedTurnover = failedTurnoverData.reduce(
         (acc, order) =>
           acc +
           order.products.reduce(
@@ -431,16 +404,12 @@ router.get("/sellerstats", auth, async (req, res) => {
         0
       );
 
-      const potentialAverage = potentialIncome / totalOrders;
       const stats = {
         totalOrders,
         failedOrders,
         succeedOrders,
-        holdOrders,
-        realizedIncome,
-        averageIncome,
-        potentialIncome,
-        potentialAverage
+        turnoverRealized,
+        failedTurnover
       };
       res.status(200).send(stats);
     } catch (e) {
