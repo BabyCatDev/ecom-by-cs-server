@@ -323,6 +323,134 @@ router.get("/deliverystats", auth, async (req, res) => {
   }
 });
 
+router.get("/sellerstats", auth, async (req, res) => {
+  if (req.user.type === "Commercial") {
+    try {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1
+      );
+      const totalOrders = await Order.find({
+        seller: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        status: { $ne: "Reported" }
+      }).count();
+
+      const failedOrders = await Order.find({
+        seller: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        status: {
+          $eq: "Failed"
+        }
+      }).count();
+
+      const succeedOrders = await Order.find({
+        seller: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        status: {
+          $eq: "Succeed"
+        }
+      }).count();
+      const holdOrders = await Order.find({
+        seller: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        status: {
+          $eq: "Hold"
+        }
+      }).count();
+      //Realized income
+      const realizedIncomeData = await Order.find({
+        seller: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        status: {
+          $eq: "Succeed"
+        }
+      }).populate({
+        path: "products",
+        populate: { path: "product", model: "Product" }
+      });
+      const realizedIncome = realizedIncomeData.reduce(
+        (acc, order) =>
+          acc +
+          order.products.reduce(
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            0
+          ),
+        0
+      );
+      const averageIncome = realizedIncome / totalOrders;
+      //Potential income
+      const potentialIncomeData = await Order.find({
+        seller: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        status: { $ne: "Reported" }
+      }).populate({
+        path: "products",
+        populate: { path: "product", model: "Product" }
+      });
+      const potentialIncome = potentialIncomeData.reduce(
+        (acc, order) =>
+          acc +
+          order.products.reduce(
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            0
+          ),
+        0
+      );
+
+      const potentialAverage = potentialIncome / totalOrders;
+      const stats = {
+        totalOrders,
+        failedOrders,
+        succeedOrders,
+        holdOrders,
+        realizedIncome,
+        averageIncome,
+        potentialIncome,
+        potentialAverage
+      };
+      res.status(200).send(stats);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send();
+    }
+  } else {
+    res.status(403).send();
+  }
+});
 router.get("/adminstats", auth, async (req, res) => {
   if (req.user.type === "Administrateur") {
     try {
