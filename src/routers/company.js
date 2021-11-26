@@ -20,6 +20,45 @@ router.post("/company", auth, async (req, res) => {
   }
 });
 
+router.patch("/company/:id", auth, async (req, res) => {
+  if (req.user.type === "Administrateur") {
+    try {
+      const companyId = req.params.id;
+      const company = await Company.updateOne(
+        {
+          _id: companyId
+        },
+        {
+          $set: {
+            ...req.body
+          }
+        }
+      );
+      res.send(company);
+    } catch (e) {
+      res.status(400).send(e);
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
+router.delete("/company/:id", auth, async (req, res) => {
+  if (req.user.type === "Administrateur") {
+    try {
+      const companyId = req.params.id;
+      const company = await Company.deleteOne({
+        _id: companyId
+      });
+      res.send(company);
+    } catch (e) {
+      res.status(400).send(e);
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
 //get companies
 router.get("/companies", auth, async (req, res) => {
   if (req.user.type === "Administrateur" || req.user.type === "Commercial") {

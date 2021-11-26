@@ -33,6 +33,56 @@ router.post("/product", auth, async (req, res) => {
   }
 });
 
+router.patch("/product/:id", auth, async (req, res) => {
+  if (req.user.type === "Administrateur") {
+    try {
+      const productId = req.params.id;
+      const product = await Product.updateOne(
+        {
+          _id: productId
+        },
+        {
+          $set: {
+            ...req.body
+          }
+        }
+      );
+      res.send(product);
+    } catch (e) {
+      res.status(400).send(e);
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
+router.delete("/product/:id", auth, async (req, res) => {
+  if (req.user.type === "Administrateur") {
+    const companyId = req.query.companyId;
+    try {
+      const productId = req.params.id;
+      const product = await Product.deleteOne({
+        _id: productId
+      });
+      const company = await Company.updateOne(
+        {
+          _id: companyId
+        },
+        {
+          $pull: {
+            products: productId
+          }
+        }
+      );
+      res.send(product);
+    } catch (e) {
+      res.status(400).send(e);
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
 //Get products
 router.get("/products", auth, async (req, res) => {
   if (req.user.type === "Administrateur") {

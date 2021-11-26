@@ -43,6 +43,45 @@ router.post("/logout", auth, async (req, res) => {
   }
 });
 
+router.patch("/user/:id", auth, async (req, res) => {
+  if (req.user.type === "Administrateur") {
+    try {
+      const userId = req.params.id;
+      const user = await User.updateOne(
+        {
+          _id: userId
+        },
+        {
+          $set: {
+            ...req.body
+          }
+        }
+      );
+      res.send(user);
+    } catch (e) {
+      res.status(400).send(e);
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
+router.delete("/user/:id", auth, async (req, res) => {
+  if (req.user.type === "Administrateur") {
+    try {
+      const userId = req.params.id;
+      const user = await User.deleteOne({
+        _id: userId
+      });
+      res.send(user);
+    } catch (e) {
+      res.status(400).send(e);
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
 //Shows Profile of the user who's logged in
 router.get("/user", auth, async (req, res) => {
   res.send(req.user);
@@ -66,7 +105,7 @@ router.get("/users", auth, async (req, res) => {
 });
 
 //update Password
-router.patch("/user/:id", auth, async (req, res) => {
+router.patch("/password/:id", auth, async (req, res) => {
   if (req.user.type === "Administrateur") {
     const { password } = req.body;
     const { id } = req.params;
@@ -89,60 +128,5 @@ router.patch("/user/:id", auth, async (req, res) => {
     res.status(403).send();
   }
 });
-
-// //Update My Profile
-// router.patch('/user/me', auth, async (req, res) => {
-//   const { fullName, country, city, age, sexe, isCompleted } = req.body
-//   const updates = Object.keys({ fullName, country, city, age, sexe })
-//   const allowedUpdates = [
-//     'fullName',
-//     'country',
-//     'city',
-//     'age',
-//     'sexe'
-//   ]
-//   const isValidOperation = updates.every((update) => {
-//     return allowedUpdates.includes(update)
-//   })
-//
-//   if (!isValidOperation) {
-//     return res.status(400).send({ error: 'Invalid updates' })
-//   }
-//
-//   try {
-//     updates.forEach((update) => req.user[update] = { fullName, country, city, age, sexe }[update])
-//     req.user.isCompleted = true
-//     await req.user.save()
-//     res.send(req.user)
-//
-//   } catch (e) {
-//     res.status(400).send(e)
-//   }
-// })
-// //generate Password
-// router.patch('/password', auth, async (req, res) => {
-//
-//   const { password, newPassword } = req.body
-//   //Verifying password
-//
-//   const isMatch = await bcrypt.compare(password, req.user.password)
-//   if (isMatch) {
-//     User.findOne({ _id: req.user._id }).then((user) => {
-//
-//       //Set the new password
-//       user.password = req.body.newPassword;
-//
-//       // Save
-//       user.save((err) => {
-//         if (err)
-//           return res.status(500).json({ message: err.message })
-//
-//       })
-//     })
-//   } else {
-//
-//     res.status(401).send({ message: 'Password is not correct.' })
-//   }
-// })
 
 module.exports = router;
