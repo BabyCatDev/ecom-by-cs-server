@@ -234,13 +234,6 @@ router.get("/adminstats", auth, async (req, res) => {
         },
         status: { $ne: "Reported" }
       }).count();
-      const totalOrders = await Order.find({
-        deliveryDate: {
-          $gte: today,
-          $lt: tomorrow
-        },
-        status: { $ne: "Reported" }
-      }).count();
 
       const failedOrders = await Order.find({
         deliveryDate: {
