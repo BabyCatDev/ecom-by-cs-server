@@ -125,22 +125,6 @@ userSchema.methods.toJSON = function() {
 
   return userObject;
 };
-// //generatePasswordReset
-// userSchema.methods.generatePasswordReset = function () {
-//
-//   const rng = seedrandom(crypto.randomBytes(64).toString('base64'), { entropy: true });
-//   const code = (rng()).toString().substring(3, 9);
-//   this.resetPasswordToken = code
-//   this.resetPasswordExpires = Date.now() + 3600000 //expires in an hour
-// }
-
-//Delete user's Rooms when user is removed
-// userSchema.pre('remove', async function (next) {
-//   const user = this
-//   await Room.deleteMany({ owner: user._id })
-//
-//   next()
-// })
 
 const User = mongoose.model("User", userSchema);
 
