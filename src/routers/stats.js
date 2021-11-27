@@ -215,6 +215,25 @@ router.get("/adminstats", auth, async (req, res) => {
         now.getMonth(),
         now.getDate() + 1
       );
+      const yesterday = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() - 1
+      );
+      const yesterdayOrders = await Order.find({
+        deliveryDate: {
+          $gte: yesterday,
+          $lt: today
+        },
+        status: { $ne: "Reported" }
+      }).count();
+      const totalOrders = await Order.find({
+        deliveryDate: {
+          $gte: today,
+          $lt: tomorrow
+        },
+        status: { $ne: "Reported" }
+      }).count();
       const totalOrders = await Order.find({
         deliveryDate: {
           $gte: today,
@@ -291,7 +310,8 @@ router.get("/adminstats", auth, async (req, res) => {
         failedOrders,
         succeedOrders,
         turnoverRealized,
-        failedTurnover
+        failedTurnover,
+        yesterdayOrders
       };
       res.status(200).send(stats);
     } catch (e) {
