@@ -87,6 +87,8 @@ router.patch("/order/:id", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
     try {
       const { status, deliveryDate, deliveryFeedback } = req.body;
+      const parsedDeliveryDay = dayjs(deliveryDate);
+      const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
       const orderId = req.params.id;
       const order = await Order.updateOne(
         {
@@ -94,7 +96,7 @@ router.patch("/order/:id", auth, async (req, res) => {
         },
         {
           $set: {
-            status: status,
+            status: datesDifference === 0 ? "Hold" : "Reported",
             deliveryDate: deliveryDate,
             deliveryFeedback: deliveryFeedback
           }
