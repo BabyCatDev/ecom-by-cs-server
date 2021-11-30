@@ -80,10 +80,101 @@ router.post("/order", auth, async (req, res) => {
     res.status(403).send();
   }
 });
+//update order
+router.patch("/order/:id", auth, async (req, res) => {
+  if (req.user.type === "Commercial") {
+    try {
+      const orderId = req.params.id;
+      const {
+        clientName,
+        clientPhones,
+        clientAddress,
+        deliveryDate,
+        delivery,
+        comments,
+        productsDetails,
+        oldProductsIds,
+        oldDelivery
+      } = req.body;
+      const products = [];
+
+      //deleting old orderDetails and create new ones
+      ///deleting the old ones
+      await OrderDetail.deleteMany({ _id: oldProductsIds });
+
+      ///creting new ones
+      const promises = productsDetails.map(async (item, i) => {
+        const orderTemp = new OrderDetail({
+          product: item.productId,
+          quantity: item.quantity
+        });
+
+        try {
+          const result = await orderTemp.save();
+          products.push(result._id);
+        } catch (e) {
+          console.log(e);
+        }
+      });
+      await Promise.all(promises);
+      ///////////////////////
+
+      //Updating order with orderDetail items
+
+      const parsedDeliveryDay = dayjs(deliveryDate);
+      const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
+      const order = await Order.updateOne(
+        {
+          _id: orderId
+        },
+        {
+          $set: {
+            status: datesDifference === 0 ? "Hold" : "Reported",
+            products,
+            clientName,
+            clientPhones,
+            clientAddress,
+            deliveryDate,
+            delivery,
+            comments
+          }
+        }
+      );
+      if (oldDelivery !== delivery) {
+        await User.updateOne(
+          {
+            _id: oldDelivery
+          },
+          {
+            pull: {
+              orders: orderId
+            }
+          }
+        );
+        await User.updateOne(
+          {
+            _id: delivery
+          },
+          {
+            $addToSet: {
+              orders: orderId
+            }
+          }
+        );
+      }
+
+      res.send(order);
+    } catch (e) {
+      res.status(400).send(e);
+    }
+  } else {
+    res.status(403).send();
+  }
+});
 
 //Postpone order
 
-router.patch("/order/:id", auth, async (req, res) => {
+router.patch("/postpone/:id", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
     try {
       const { status, deliveryDate, deliveryFeedback } = req.body;
