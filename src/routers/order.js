@@ -146,7 +146,7 @@ router.patch("/order/:id", auth, async (req, res) => {
             _id: oldDelivery
           },
           {
-            pull: {
+            $pull: {
               orders: orderId
             }
           }
