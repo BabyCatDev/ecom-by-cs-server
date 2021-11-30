@@ -317,6 +317,53 @@ router.get("/deliveryorders", auth, async (req, res) => {
   }
 });
 
+router.get("/admindeliveryorders/:id", auth, async (req, res) => {
+  if (req.user.type === "Administrateur") {
+    try {
+      const deliveryId = req.params.id;
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1
+      );
+      const orders = await Order.find({
+        delivery: {
+          $eq: deliveryId
+        },
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        status: { $ne: "Reported" }
+      })
+        .populate({
+          path: "products",
+          populate: { path: "product", model: "Product" }
+        })
+        .populate({
+          path: "seller",
+          select: "fullName phones email place"
+        })
+        .populate({
+          path: "delivery",
+          select: "fullName phones email place"
+        })
+        .sort({ createdAt: -1 });
+      if (!orders) {
+        return res.status(404).send();
+      }
+      res.send(orders);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send();
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
 //delivery guy feedback for an order, if it's delivery or failed
 
 router.patch("/delivery/:id", auth, async (req, res) => {
