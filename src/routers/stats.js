@@ -222,23 +222,23 @@ router.get("/adminstats", auth, async (req, res) => {
       );
       const yesterdayOrders = await Order.find({
         deliveryDate: {
-          $gte: yesterday,
-          $lt: today
+          $gte: req.query.fromDate || yesterday,
+          $lt: req.query.toDate || today
         },
         status: { $ne: "Reported" }
       }).count();
       const totalOrders = await Order.find({
         deliveryDate: {
-          $gte: today,
-          $lt: tomorrow
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
         },
         status: { $ne: "Reported" }
       }).count();
 
       const failedOrders = await Order.find({
         deliveryDate: {
-          $gte: today,
-          $lt: tomorrow
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
         },
         status: {
           $eq: "Failed"
@@ -247,8 +247,8 @@ router.get("/adminstats", auth, async (req, res) => {
 
       const succeedOrders = await Order.find({
         deliveryDate: {
-          $gte: today,
-          $lt: tomorrow
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
         },
         status: {
           $eq: "Succeed"
@@ -257,8 +257,8 @@ router.get("/adminstats", auth, async (req, res) => {
 
       const turnoverRealizedData = await Order.find({
         deliveryDate: {
-          $gte: today,
-          $lt: tomorrow
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
         },
         status: {
           $eq: "Succeed"
@@ -278,8 +278,8 @@ router.get("/adminstats", auth, async (req, res) => {
       );
       const failedTurnoverData = await Order.find({
         deliveryDate: {
-          $gte: today,
-          $lt: tomorrow
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
         },
         status: {
           $eq: "Failed"
