@@ -242,7 +242,52 @@ router.get("/adminstats", auth, async (req, res) => {
 
         { $group: { _id: null, avg: { $avg: "$count" } } }
       ]);
-      console.log({ averageDaily, fromDate, toDate, today, tomorrow });
+      ///////////////////////
+      const percentageAllDailyDeliveries = await Order.aggregate([
+        {
+          $match: {
+            deliveryDate: {
+              $gte: req.query.fromDate ? fromDate : today,
+              $lt: req.query.toDate ? toDate : tomorrow
+            },
+            status: {
+              $ne: "Reported"
+            }
+          }
+        },
+        {
+          $group: { _id: "$deliveryDate", count: { $sum: 1 } }
+        }
+      ]);
+      const percentageSuccDailyDeliveries = await Order.aggregate([
+        {
+          $match: {
+            deliveryDate: {
+              $gte: req.query.fromDate ? fromDate : today,
+              $lt: req.query.toDate ? toDate : tomorrow
+            },
+            status: {
+              $eq: "Succeed"
+            }
+          }
+        },
+        {
+          $group: { _id: "$deliveryDate", count: { $sum: 1 } }
+        }
+      ]);
+      const percentageDailyDeliveriesItems = percentageAllDailyDeliveries.reduce(
+        (acc, pa) => {
+          let succ = percentageSuccDailyDeliveries.find(
+            ps => ps._id.toString() === pa._id.toString()
+          );
+          const succVal = succ || { count: 0 };
+          return (succVal.count / pa.count) * 100 + acc;
+        },
+        0
+      );
+      const percentageDailyDeliveries =
+        percentageDailyDeliveriesItems / percentageAllDailyDeliveries.length;
+
       /////////
       const totalOrders = await Order.find({
         deliveryDate: {
@@ -321,7 +366,8 @@ router.get("/adminstats", auth, async (req, res) => {
         succeedOrders,
         turnoverRealized,
         failedTurnover,
-        averageDaily: averageDaily.length > 0 ? averageDaily[0].avg : 0
+        averageDaily: averageDaily.length > 0 ? averageDaily[0].avg : 0,
+        percentageDailyDeliveries
       };
       res.status(200).send(stats);
     } catch (e) {
