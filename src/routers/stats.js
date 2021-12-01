@@ -240,7 +240,9 @@ router.get("/adminstats", auth, async (req, res) => {
 
         { $group: { _id: null, avg: { $avg: "$count" } } }
       ]);
-      console.log({ averageDaily });
+      const fromDate = req.query.fromDate;
+      const toDate = req.query.toDate;
+      console.log({ averageDaily, fromDate, toDate, today, tomorrow });
       /////////
       const totalOrders = await Order.find({
         deliveryDate: {
