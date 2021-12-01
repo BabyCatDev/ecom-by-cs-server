@@ -220,13 +220,28 @@ router.get("/adminstats", auth, async (req, res) => {
         now.getMonth(),
         now.getDate() - 1
       );
-      const yesterdayOrders = await Order.find({
-        deliveryDate: {
-          $gte: req.query.fromDate || yesterday,
-          $lt: req.query.toDate || today
+      // sum the counts of period
+
+      const averageDaily = await Order.aggregate([
+        {
+          $match: {
+            createdAt: {
+              $gte: req.query.fromDate || today,
+              $lt: req.query.toDate || tomorrow
+            },
+            status: {
+              $ne: "Reported"
+            }
+          }
         },
-        status: { $ne: "Reported" }
-      }).count();
+        {
+          $group: { _id: { deliveryDate: "$deliveryDate" }, count: { $sum: 1 } }
+        },
+
+        { $group: { _id: null, avg: { $avg: "$count" } } }
+      ]);
+
+      /////////
       const totalOrders = await Order.find({
         deliveryDate: {
           $gte: req.query.fromDate || today,
@@ -304,7 +319,7 @@ router.get("/adminstats", auth, async (req, res) => {
         succeedOrders,
         turnoverRealized,
         failedTurnover,
-        yesterdayOrders
+        averageDaily: averageDaily.length > 0 ? averageDaily[0].avg : 0
       };
       res.status(200).send(stats);
     } catch (e) {
