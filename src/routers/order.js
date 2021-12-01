@@ -27,7 +27,9 @@ router.post("/order", auth, async (req, res) => {
     const promises = productsDetails.map(async (item, i) => {
       const orderTemp = new OrderDetail({
         product: item.productId,
-        quantity: item.quantity
+        quantity: item.quantity,
+        company: item.companyId,
+        sellingPrice: item.price
       });
 
       try {
@@ -106,7 +108,9 @@ router.patch("/order/:id", auth, async (req, res) => {
       const promises = productsDetails.map(async (item, i) => {
         const orderTemp = new OrderDetail({
           product: item.productId,
-          quantity: item.quantity
+          quantity: item.quantity,
+          company: item.companyId,
+          sellingPrice: item.price
         });
 
         try {
