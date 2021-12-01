@@ -228,8 +228,8 @@ router.get("/adminstats", auth, async (req, res) => {
         {
           $match: {
             createdAt: {
-              $gte: fromDate || today,
-              $lt: toDate || tomorrow
+              $gte: req.query.fromDate ? fromDate : today,
+              $lt: req.query.toDate ? toDate : tomorrow
             },
             status: {
               $ne: "Reported"
