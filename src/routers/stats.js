@@ -221,13 +221,15 @@ router.get("/adminstats", auth, async (req, res) => {
         now.getDate() - 1
       );
       // sum the counts of period
+      const fromDate = new Date(req.query.fromDate);
+      const toDate = new Date(req.query.toDate);
 
       const averageDaily = await Order.aggregate([
         {
           $match: {
             createdAt: {
-              $gte: req.query.fromDate || today,
-              $lt: req.query.toDate || tomorrow
+              $gte: fromDate || today,
+              $lt: toDate || tomorrow
             },
             status: {
               $ne: "Reported"
@@ -240,8 +242,6 @@ router.get("/adminstats", auth, async (req, res) => {
 
         { $group: { _id: null, avg: { $avg: "$count" } } }
       ]);
-      const fromDate = req.query.fromDate;
-      const toDate = req.query.toDate;
       console.log({ averageDaily, fromDate, toDate, today, tomorrow });
       /////////
       const totalOrders = await Order.find({
