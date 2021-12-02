@@ -728,4 +728,108 @@ router.get("/adminproductstats/:id", auth, async (req, res) => {
   }
 });
 
+router.get("/admincompanystats/:id", auth, async (req, res) => {
+  if (req.user.type === "Administrateur") {
+    try {
+      const companyId = req.params.id;
+
+      let totalOrders = 0;
+      let failedOrders = 0;
+      let succeedOrders = 0;
+      let turnoverRealized = 0;
+      let failedTurnover = 0;
+
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1
+      );
+
+      ///////////////////////////////////////////////////////////////////////
+
+      const totalOrdersData = await Order.find({
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        status: { $ne: "Reported" }
+      }).populate({
+        path: "products",
+        populate: { path: "product", model: "Product" }
+      });
+
+      totalOrdersData.forEach((item, i) => {
+        item.products.forEach(pr => {
+          if (pr.company.toString() === companyId) totalOrders++;
+        });
+      });
+      ///////////////////////////////////////////////////////////////////////
+
+      const succeedData = await Order.find({
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        status: {
+          $eq: "Succeed"
+        }
+      }).populate({
+        path: "products",
+        populate: { path: "product", model: "Product" }
+      });
+
+      succeedData.forEach((item, i) => {
+        item.products.forEach(pr => {
+          if (pr.company.toString() === companyId) {
+            succeedOrders++;
+            turnoverRealized += pr.quantity * pr.sellingPrice;
+          }
+        });
+      });
+
+      //////////////////////////////////////////////////////////////////////
+      const failedOrdersData = await Order.find({
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        status: {
+          $eq: "Failed"
+        }
+      }).populate({
+        path: "products",
+        populate: { path: "product", model: "Product" }
+      });
+
+      failedOrdersData.forEach((item, i) => {
+        item.products.forEach(pr => {
+          if (pr.company.toString() === companyId) {
+            failedOrders++;
+            failedTurnover += pr.quantity * pr.sellingPrice;
+          }
+        });
+      });
+
+      //////////////////////////////////////////////////////////////////////
+
+      const stats = {
+        totalOrders,
+        failedOrders,
+        succeedOrders,
+        turnoverRealized,
+        failedTurnover
+      };
+
+      res.status(200).send(stats);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send();
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
 module.exports = router;
