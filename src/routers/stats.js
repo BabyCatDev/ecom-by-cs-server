@@ -237,7 +237,10 @@ router.get("/adminstats", auth, async (req, res) => {
           }
         },
         {
-          $group: { _id: { createdAt: "$createdAt" }, count: { $sum: 1 } }
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 }
+          }
         },
 
         { $group: { _id: null, avg: { $avg: "$count" } } }
