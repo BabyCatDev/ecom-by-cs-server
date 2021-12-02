@@ -259,7 +259,12 @@ router.get("/adminstats", auth, async (req, res) => {
           }
         },
         {
-          $group: { _id: "$deliveryDate", count: { $sum: 1 } }
+          $group: {
+            _id: {
+              $dateToString: { format: "%Y-%m-%d", date: "$deliveryDate" }
+            },
+            count: { $sum: 1 }
+          }
         }
       ]);
       const percentageSuccDailyDeliveries = await Order.aggregate([
@@ -275,7 +280,12 @@ router.get("/adminstats", auth, async (req, res) => {
           }
         },
         {
-          $group: { _id: "$deliveryDate", count: { $sum: 1 } }
+          $group: {
+            _id: {
+              $dateToString: { format: "%Y-%m-%d", date: "$deliveryDate" }
+            },
+            count: { $sum: 1 }
+          }
         }
       ]);
       const percentageDailyDeliveriesItems = percentageAllDailyDeliveries.reduce(
