@@ -154,7 +154,7 @@ router.get("/sellerstats", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -178,7 +178,7 @@ router.get("/sellerstats", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -237,9 +237,11 @@ router.get("/adminstats", auth, async (req, res) => {
           }
         },
         {
-          $group: { _id: { createdAt: "$createdAt" }, count: { $sum: 1 } }
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 }
+          }
         },
-
         { $group: { _id: null, avg: { $avg: "$count" } } }
       ]);
       ///////////////////////
@@ -333,7 +335,7 @@ router.get("/adminstats", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -354,7 +356,7 @@ router.get("/adminstats", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -447,7 +449,7 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -472,7 +474,7 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -564,7 +566,7 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -589,7 +591,7 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -611,7 +613,7 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
     res.status(403).send();
   }
 });
-
+//
 router.get("/adminproductstats/:id", auth, async (req, res) => {
   if (req.user.type === "Administrateur") {
     try {
@@ -668,7 +670,7 @@ router.get("/adminproductstats/:id", auth, async (req, res) => {
         item.products.forEach(pr => {
           if (pr.product._id.toString() === productId) {
             succeedOrders++;
-            turnoverRealized += pr.quantity * pr.product.price;
+            turnoverRealized += pr.quantity * pr.sellingPrice;
           }
         });
       });
@@ -691,7 +693,7 @@ router.get("/adminproductstats/:id", auth, async (req, res) => {
         item.products.forEach(pr => {
           if (pr.product._id.toString() === productId) {
             failedOrders++;
-            failedTurnover += pr.quantity * pr.product.price;
+            failedTurnover += pr.quantity * pr.sellingPrice;
           }
         });
       });
