@@ -7,10 +7,20 @@ const orderDetailSchema = new mongoose.Schema(
       ref: "Product",
       required: true
     },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true
+    },
     quantity: {
       type: Number,
       required: true,
       default: 1
+    },
+    sellingPrice: {
+      type: String,
+      required: true,
+      max: 30
     }
   },
   { timestamps: true }

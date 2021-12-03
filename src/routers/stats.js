@@ -36,9 +36,14 @@ router.get("/deliverystats", auth, async (req, res) => {
           $gte: today,
           $lt: tomorrow
         },
-        status: {
-          $eq: "Failed"
-        }
+        $or: [
+          {
+            status: "Failed"
+          },
+          {
+            status: "Cancelled"
+          }
+        ]
       }).count();
 
       const succeedOrders = await Order.find({
@@ -93,8 +98,7 @@ router.get("/sellerstats", auth, async (req, res) => {
         deliveryDate: {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
-        },
-        status: { $ne: "Reported" }
+        }
       }).count();
 
       const failedOrders = await Order.find({
@@ -105,9 +109,14 @@ router.get("/sellerstats", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        status: {
-          $eq: "Failed"
-        }
+        $or: [
+          {
+            status: "Failed"
+          },
+          {
+            status: "Cancelled"
+          }
+        ]
       }).count();
 
       const succeedOrders = await Order.find({
@@ -154,7 +163,7 @@ router.get("/sellerstats", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -168,8 +177,7 @@ router.get("/sellerstats", auth, async (req, res) => {
         deliveryDate: {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
-        },
-        status: { $ne: "Reported" }
+        }
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }
@@ -178,7 +186,7 @@ router.get("/sellerstats", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -230,9 +238,6 @@ router.get("/adminstats", auth, async (req, res) => {
             createdAt: {
               $gte: req.query.fromDate ? fromDate : today,
               $lt: req.query.toDate ? toDate : tomorrow
-            },
-            status: {
-              $ne: "Reported"
             }
           }
         },
@@ -242,7 +247,6 @@ router.get("/adminstats", auth, async (req, res) => {
             count: { $sum: 1 }
           }
         },
-
         { $group: { _id: null, avg: { $avg: "$count" } } }
       ]);
       ///////////////////////
@@ -252,9 +256,6 @@ router.get("/adminstats", auth, async (req, res) => {
             deliveryDate: {
               $gte: req.query.fromDate ? fromDate : today,
               $lt: req.query.toDate ? toDate : tomorrow
-            },
-            status: {
-              $ne: "Reported"
             }
           }
         },
@@ -306,8 +307,7 @@ router.get("/adminstats", auth, async (req, res) => {
         deliveryDate: {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
-        },
-        status: { $ne: "Reported" }
+        }
       }).count();
 
       const failedOrders = await Order.find({
@@ -315,9 +315,14 @@ router.get("/adminstats", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        status: {
-          $eq: "Failed"
-        }
+        $or: [
+          {
+            status: "Failed"
+          },
+          {
+            status: "Cancelled"
+          }
+        ]
       }).count();
 
       const succeedOrders = await Order.find({
@@ -346,7 +351,7 @@ router.get("/adminstats", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -356,9 +361,14 @@ router.get("/adminstats", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        status: {
-          $eq: "Failed"
-        }
+        $or: [
+          {
+            status: "Failed"
+          },
+          {
+            status: "Cancelled"
+          }
+        ]
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }
@@ -367,7 +377,7 @@ router.get("/adminstats", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -422,9 +432,14 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        status: {
-          $eq: "Failed"
-        }
+        $or: [
+          {
+            status: "Failed"
+          },
+          {
+            status: "Cancelled"
+          }
+        ]
       }).count();
 
       const succeedOrders = await Order.find({
@@ -460,7 +475,7 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -485,7 +500,7 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -527,8 +542,7 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
         deliveryDate: {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
-        },
-        status: { $ne: "Reported" }
+        }
       }).count();
 
       const failedOrders = await Order.find({
@@ -539,9 +553,14 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        status: {
-          $eq: "Failed"
-        }
+        $or: [
+          {
+            status: "Failed"
+          },
+          {
+            status: "Cancelled"
+          }
+        ]
       }).count();
 
       const succeedOrders = await Order.find({
@@ -577,7 +596,7 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -591,9 +610,14 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        status: {
-          $eq: "Failed"
-        }
+        $or: [
+          {
+            status: "Failed"
+          },
+          {
+            status: "Cancelled"
+          }
+        ]
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }
@@ -602,7 +626,7 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
         (acc, order) =>
           acc +
           order.products.reduce(
-            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.product.price,
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
             0
           ),
         0
@@ -624,7 +648,7 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
     res.status(403).send();
   }
 });
-
+//
 router.get("/adminproductstats/:id", auth, async (req, res) => {
   if (req.user.type === "Administrateur") {
     try {
@@ -681,7 +705,7 @@ router.get("/adminproductstats/:id", auth, async (req, res) => {
         item.products.forEach(pr => {
           if (pr.product._id.toString() === productId) {
             succeedOrders++;
-            turnoverRealized += pr.quantity * pr.product.price;
+            turnoverRealized += pr.quantity * pr.sellingPrice;
           }
         });
       });
@@ -692,9 +716,14 @@ router.get("/adminproductstats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        status: {
-          $eq: "Failed"
-        }
+        $or: [
+          {
+            status: "Failed"
+          },
+          {
+            status: "Cancelled"
+          }
+        ]
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }
@@ -704,7 +733,116 @@ router.get("/adminproductstats/:id", auth, async (req, res) => {
         item.products.forEach(pr => {
           if (pr.product._id.toString() === productId) {
             failedOrders++;
-            failedTurnover += pr.quantity * pr.product.price;
+            failedTurnover += pr.quantity * pr.sellingPrice;
+          }
+        });
+      });
+
+      //////////////////////////////////////////////////////////////////////
+
+      const stats = {
+        totalOrders,
+        failedOrders,
+        succeedOrders,
+        turnoverRealized,
+        failedTurnover
+      };
+
+      res.status(200).send(stats);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send();
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
+router.get("/admincompanystats/:id", auth, async (req, res) => {
+  if (req.user.type === "Administrateur") {
+    try {
+      const companyId = req.params.id;
+
+      let totalOrders = 0;
+      let failedOrders = 0;
+      let succeedOrders = 0;
+      let turnoverRealized = 0;
+      let failedTurnover = 0;
+
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1
+      );
+
+      ///////////////////////////////////////////////////////////////////////
+
+      const totalOrdersData = await Order.find({
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        status: { $ne: "Reported" }
+      }).populate({
+        path: "products",
+        populate: { path: "product", model: "Product" }
+      });
+
+      totalOrdersData.forEach((item, i) => {
+        item.products.forEach(pr => {
+          if (pr.company.toString() === companyId) totalOrders++;
+        });
+      });
+      ///////////////////////////////////////////////////////////////////////
+
+      const succeedData = await Order.find({
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        status: {
+          $eq: "Succeed"
+        }
+      }).populate({
+        path: "products",
+        populate: { path: "product", model: "Product" }
+      });
+
+      succeedData.forEach((item, i) => {
+        item.products.forEach(pr => {
+          if (pr.company.toString() === companyId) {
+            succeedOrders++;
+            turnoverRealized += pr.quantity * pr.sellingPrice;
+          }
+        });
+      });
+
+      //////////////////////////////////////////////////////////////////////
+      const failedOrdersData = await Order.find({
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        $or: [
+          {
+            status: "Failed"
+          },
+          {
+            status: "Cancelled"
+          }
+        ]
+      }).populate({
+        path: "products",
+        populate: { path: "product", model: "Product" }
+      });
+
+      failedOrdersData.forEach((item, i) => {
+        item.products.forEach(pr => {
+          if (pr.company.toString() === companyId) {
+            failedOrders++;
+            failedTurnover += pr.quantity * pr.sellingPrice;
           }
         });
       });

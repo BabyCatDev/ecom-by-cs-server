@@ -27,7 +27,9 @@ router.post("/order", auth, async (req, res) => {
     const promises = productsDetails.map(async (item, i) => {
       const orderTemp = new OrderDetail({
         product: item.productId,
-        quantity: item.quantity
+        quantity: item.quantity,
+        company: item.companyId,
+        sellingPrice: item.price
       });
 
       try {
@@ -106,7 +108,9 @@ router.patch("/order/:id", auth, async (req, res) => {
       const promises = productsDetails.map(async (item, i) => {
         const orderTemp = new OrderDetail({
           product: item.productId,
-          quantity: item.quantity
+          quantity: item.quantity,
+          company: item.companyId,
+          sellingPrice: item.price
         });
 
         try {
@@ -178,22 +182,114 @@ router.patch("/postpone/:id", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
     try {
       const { status, deliveryDate, deliveryFeedback } = req.body;
-      const parsedDeliveryDay = dayjs(deliveryDate);
-      const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
       const orderId = req.params.id;
-      const order = await Order.updateOne(
-        {
-          _id: orderId
-        },
-        {
-          $set: {
-            status: datesDifference === 0 ? "Hold" : "Reported",
-            deliveryDate: deliveryDate,
-            deliveryFeedback: deliveryFeedback
+      if (status === "Failed") {
+        ////////////////////////////////
+        ////GET ORDER WITH POPULATE SUBORDERS
+        const oldOrder = await Order.findById(orderId)
+          .populate({
+            path: "products"
+          })
+          .exec();
+        ////UPDATE THAT ORDER
+        const updateOrder = await Order.updateOne(
+          {
+            _id: orderId
+          },
+          {
+            $set: {
+              status: "Cancelled",
+              deliveryFeedback: deliveryFeedback
+            }
           }
+        );
+
+        ////CREATE NEW ORDER FROM OLD ORDER DATA
+        const {
+          clientName,
+          clientPhones,
+          clientAddress,
+          delivery,
+          products,
+          comments
+        } = oldOrder;
+        const productsItems = [];
+
+        const parsedDeliveryDay = dayjs(deliveryDate);
+        const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
+        //Creating orderDetails
+        const promises = products.map(async (item, i) => {
+          const orderTemp = new OrderDetail({
+            product: item.product,
+            quantity: item.quantity,
+            company: item.company,
+            sellingPrice: item.sellingPrice
+          });
+
+          try {
+            const result = await orderTemp.save();
+            productsItems.push(result._id);
+          } catch (e) {
+            console.log(e);
+          }
+        });
+        await Promise.all(promises);
+        //Creating order with orderDetail items
+        const order = new Order({
+          products: productsItems,
+          clientName,
+          clientPhones,
+          clientAddress,
+          deliveryDate,
+          delivery,
+          comments,
+          status: datesDifference === 0 ? "Hold" : "Reported",
+          seller: req.user._id
+        });
+        try {
+          const result = await order.save();
+          await User.updateOne(
+            {
+              _id: delivery
+            },
+            {
+              $addToSet: {
+                orders: result._id
+              }
+            }
+          );
+          await User.updateOne(
+            {
+              _id: req.user._id
+            },
+            {
+              $addToSet: {
+                orders: result._id
+              }
+            }
+          );
+          res.status(201).send({ result });
+        } catch (e) {
+          res.status(400).send(e);
         }
-      );
-      res.send(order);
+        ///////////////////////////////
+      } else {
+        const parsedDeliveryDay = dayjs(deliveryDate);
+        const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
+        const order = await Order.updateOne(
+          {
+            _id: orderId
+          },
+          {
+            $set: {
+              status: datesDifference === 0 ? "Hold" : "Reported",
+              deliveryDate: deliveryDate,
+              deliveryFeedback: deliveryFeedback
+            }
+          }
+        );
+        res.send(order);
+      }
     } catch (e) {
       res.status(400).send(e);
     }
