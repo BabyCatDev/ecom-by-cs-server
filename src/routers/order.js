@@ -272,8 +272,6 @@ router.patch("/postpone/:id", auth, async (req, res) => {
         } catch (e) {
           res.status(400).send(e);
         }
-
-        res.send(order);
         ///////////////////////////////
       } else {
         const parsedDeliveryDay = dayjs(deliveryDate);
