@@ -183,6 +183,7 @@ router.patch("/postpone/:id", auth, async (req, res) => {
     try {
       const { status, deliveryDate, deliveryFeedback } = req.body;
       const orderId = req.params.id;
+      console.log({ status });
       if (status === "Failed") {
         ////////////////////////////////
         ////GET ORDER WITH POPULATE SUBORDERS
