@@ -432,7 +432,14 @@ router.get("/admindeliveryorders/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        status: { $ne: "Reported" }
+        $nor: [
+          {
+            status: "Reported"
+          },
+          {
+            status: "Cancelled"
+          }
+        ]
       })
         .populate({
           path: "products",
