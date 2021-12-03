@@ -182,22 +182,51 @@ router.patch("/postpone/:id", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
     try {
       const { status, deliveryDate, deliveryFeedback } = req.body;
-      const parsedDeliveryDay = dayjs(deliveryDate);
-      const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
       const orderId = req.params.id;
-      const order = await Order.updateOne(
-        {
-          _id: orderId
-        },
-        {
-          $set: {
-            status: datesDifference === 0 ? "Hold" : "Reported",
-            deliveryDate: deliveryDate,
-            deliveryFeedback: deliveryFeedback
+      if (status === "Failed") {
+        ////////////////////////////////
+        ////GET ORDER WITH POPULATE SUBORDERS
+        const oldOrder = await Order.findById(orderId)
+          .populate({
+            path: "products"
+          })
+          .exec();
+        ////UPDATE THAT ORDER
+        const order = await Order.updateOne(
+          {
+            _id: orderId
+          },
+          {
+            $set: {
+              status: "Cancelled",
+              deliveryFeedback: deliveryFeedback
+            }
           }
-        }
-      );
-      res.send(order);
+        );
+
+        ////CREATE NEW ORDER FROM OLD ORDER DATA
+        console.log({ oldOrder });
+        console.log({ order });
+
+        res.send(order);
+        ///////////////////////////////
+      } else {
+        const parsedDeliveryDay = dayjs(deliveryDate);
+        const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
+        const order = await Order.updateOne(
+          {
+            _id: orderId
+          },
+          {
+            $set: {
+              status: datesDifference === 0 ? "Hold" : "Reported",
+              deliveryDate: deliveryDate,
+              deliveryFeedback: deliveryFeedback
+            }
+          }
+        );
+        res.send(order);
+      }
     } catch (e) {
       res.status(400).send(e);
     }
