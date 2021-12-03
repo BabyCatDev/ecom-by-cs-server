@@ -432,9 +432,14 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        status: {
-          $eq: "Failed"
-        }
+        $or: [
+          {
+            status: "Failed"
+          },
+          {
+            status: "Cancelled"
+          }
+        ]
       }).count();
 
       const succeedOrders = await Order.find({
