@@ -246,9 +246,6 @@ router.get("/adminstats", auth, async (req, res) => {
             deliveryDate: {
               $gte: req.query.fromDate ? fromDate : today,
               $lt: req.query.toDate ? toDate : tomorrow
-            },
-            status: {
-              $ne: "Reported"
             }
           }
         },
