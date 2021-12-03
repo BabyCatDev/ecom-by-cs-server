@@ -93,8 +93,7 @@ router.get("/sellerstats", auth, async (req, res) => {
         deliveryDate: {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
-        },
-        status: { $ne: "Reported" }
+        }
       }).count();
 
       const failedOrders = await Order.find({
@@ -168,8 +167,7 @@ router.get("/sellerstats", auth, async (req, res) => {
         deliveryDate: {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
-        },
-        status: { $ne: "Reported" }
+        }
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }
@@ -522,8 +520,7 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
         deliveryDate: {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
-        },
-        status: { $ne: "Reported" }
+        }
       }).count();
 
       const failedOrders = await Order.find({
