@@ -36,10 +36,16 @@ router.get("/deliverystats", auth, async (req, res) => {
           $gte: today,
           $lt: tomorrow
         },
-        status: {
-          $eq: "Failed",
-          $eq: "Cancelled"
-        }
+        $or: [
+          {
+            status: {
+              $eq: "Failed"
+            },
+            status: {
+              $eq: "Cancelled"
+            }
+          }
+        ]
       }).count();
 
       const succeedOrders = await Order.find({
