@@ -38,12 +38,10 @@ router.get("/deliverystats", auth, async (req, res) => {
         },
         $or: [
           {
-            status: {
-              $eq: "Failed"
-            },
-            status: {
-              $eq: "Cancelled"
-            }
+            status: "Failed"
+          },
+          {
+            status: "Cancelled"
           }
         ]
       }).count();
