@@ -37,7 +37,8 @@ router.get("/deliverystats", auth, async (req, res) => {
           $lt: tomorrow
         },
         status: {
-          $eq: "Failed"
+          $eq: "Failed",
+          $eq: "Cancelled"
         }
       }).count();
 
