@@ -105,7 +105,8 @@ router.get("/sellerstats", auth, async (req, res) => {
           $lt: req.query.toDate || tomorrow
         },
         status: {
-          $eq: "Failed"
+          $eq: "Failed",
+          $eq: "Cancelled"
         }
       }).count();
 
@@ -306,7 +307,8 @@ router.get("/adminstats", auth, async (req, res) => {
           $lt: req.query.toDate || tomorrow
         },
         status: {
-          $eq: "Failed"
+          $eq: "Failed",
+          $eq: "Cancelled"
         }
       }).count();
 
@@ -347,7 +349,8 @@ router.get("/adminstats", auth, async (req, res) => {
           $lt: req.query.toDate || tomorrow
         },
         status: {
-          $eq: "Failed"
+          $eq: "Failed",
+          $eq: "Cancelled"
         }
       }).populate({
         path: "products",
@@ -529,7 +532,8 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
           $lt: req.query.toDate || tomorrow
         },
         status: {
-          $eq: "Failed"
+          $eq: "Failed",
+          $eq: "Cancelled"
         }
       }).count();
 
@@ -581,7 +585,8 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
           $lt: req.query.toDate || tomorrow
         },
         status: {
-          $eq: "Failed"
+          $eq: "Failed",
+          $eq: "Cancelled"
         }
       }).populate({
         path: "products",
@@ -682,7 +687,8 @@ router.get("/adminproductstats/:id", auth, async (req, res) => {
           $lt: req.query.toDate || tomorrow
         },
         status: {
-          $eq: "Failed"
+          $eq: "Failed",
+          $eq: "Cancelled"
         }
       }).populate({
         path: "products",
@@ -786,7 +792,8 @@ router.get("/admincompanystats/:id", auth, async (req, res) => {
           $lt: req.query.toDate || tomorrow
         },
         status: {
-          $eq: "Failed"
+          $eq: "Failed",
+          $eq: "Cancelled"
         }
       }).populate({
         path: "products",
