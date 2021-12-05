@@ -37,14 +37,9 @@ router.get("/deliverystats", auth, async (req, res) => {
           $gte: today,
           $lt: tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).count();
 
       const succeedOrders = await Order.find({
@@ -69,6 +64,9 @@ router.get("/deliverystats", auth, async (req, res) => {
         },
         status: {
           $eq: "Hold"
+        },
+        postponed: {
+          $eq: false
         }
       }).count();
       const stats = { totalOrders, failedOrders, succeedOrders, holdOrders };
@@ -110,14 +108,9 @@ router.get("/sellerstats", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).count();
 
       const succeedOrders = await Order.find({
@@ -321,14 +314,9 @@ router.get("/adminstats", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).count();
 
       const succeedOrders = await Order.find({
@@ -367,14 +355,9 @@ router.get("/adminstats", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }
@@ -438,14 +421,9 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).count();
 
       const succeedOrders = await Order.find({
@@ -495,14 +473,9 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }
@@ -564,14 +537,9 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).count();
 
       const succeedOrders = await Order.find({
@@ -621,14 +589,9 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }
@@ -727,14 +690,9 @@ router.get("/adminproductstats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }
@@ -836,14 +794,9 @@ router.get("/admincompanystats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }

@@ -35,6 +35,10 @@ const orderSchema = new mongoose.Schema(
       type: Date,
       required: true
     },
+    postponed: {
+      type: Boolean,
+      default: false
+    },
     delivery: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

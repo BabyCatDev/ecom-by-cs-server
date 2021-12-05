@@ -183,7 +183,7 @@ router.patch("/postpone/:id", auth, async (req, res) => {
     try {
       const { status, deliveryDate, deliveryFeedback } = req.body;
       const orderId = req.params.id;
-      if (status === "Failed") {
+      if (status === "Failed" || status === "Hold") {
         ////////////////////////////////
         ////GET ORDER WITH POPULATE SUBORDERS
         const oldOrder = await Order.findById(orderId)
@@ -198,8 +198,7 @@ router.patch("/postpone/:id", auth, async (req, res) => {
           },
           {
             $set: {
-              status: "Cancelled",
-              deliveryFeedback: deliveryFeedback
+              postponed: true
             }
           }
         );
@@ -341,14 +340,12 @@ router.get("/sellerorders", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $nor: [
-          {
-            status: "Reported"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $ne: "Reported"
+        },
+        postponed: {
+          $eq: false
+        }
       })
         .populate({
           path: "products",
@@ -421,7 +418,10 @@ router.get("/deliveryorders", auth, async (req, res) => {
           $gte: today,
           $lt: tomorrow
         },
-        status: { $ne: "Reported" }
+        status: { $ne: "Reported" },
+        postponed: {
+          $eq: false
+        }
       })
         .populate({
           path: "products",
@@ -464,14 +464,12 @@ router.get("/admindeliveryorders/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $nor: [
-          {
-            status: "Reported"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $ne: "Reported"
+        },
+        postponed: {
+          $eq: false
+        }
       })
         .populate({
           path: "products",
