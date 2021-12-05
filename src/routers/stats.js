@@ -1,6 +1,7 @@
 const express = require("express");
 const Order = require("../models/order");
 const auth = require("../middleware/auth");
+const dayjs = require("dayjs");
 
 const router = new express.Router();
 
@@ -232,7 +233,7 @@ router.get("/adminstats", auth, async (req, res) => {
       const fromDate = new Date(req.query.fromDate);
       const toDate = new Date(req.query.toDate);
 
-      const averageDaily = await Order.aggregate([
+      const sumDays = await Order.aggregate([
         {
           $match: {
             createdAt: {
@@ -246,9 +247,16 @@ router.get("/adminstats", auth, async (req, res) => {
             _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
             count: { $sum: 1 }
           }
-        }
+        },
+        { $group: { _id: null, avg: { $sum: "$count" } } }
       ]);
 
+      const parsedFromDate = dayjs(fromDate);
+      const parsedToDate = dayjs(toDate);
+      const datesDifference = parsedFromDate.diff(parsedToDate, "days");
+      const averageDaily = sumDays / datesDifference;
+      console.log({ sumDays });
+      console.log({ datesDifference });
       console.log({ averageDaily });
       ///////////////////////
       const percentageAllDailyDeliveries = await Order.aggregate([
@@ -390,7 +398,7 @@ router.get("/adminstats", auth, async (req, res) => {
         succeedOrders,
         turnoverRealized,
         failedTurnover,
-        averageDaily: averageDaily.length > 0 ? averageDaily[0].avg : 0,
+        averageDaily: averageDaily,
         percentageDailyDeliveries
       };
       res.status(200).send(stats);
