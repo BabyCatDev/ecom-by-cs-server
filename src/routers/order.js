@@ -298,6 +298,31 @@ router.patch("/postpone/:id", auth, async (req, res) => {
   }
 });
 
+router.patch("/confirm/:id", auth, async (req, res) => {
+  if (req.user.type === "Commercial") {
+    try {
+      const { deliveryDate } = req.body;
+      const orderId = req.params.id;
+      const order = await Order.updateOne(
+        {
+          _id: orderId
+        },
+        {
+          $set: {
+            status: "Hold",
+            deliveryDate: deliveryDate
+          }
+        }
+      );
+      res.send(order);
+    } catch (e) {
+      res.status(400).send(e);
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
 router.get("/sellerorders", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
     try {
