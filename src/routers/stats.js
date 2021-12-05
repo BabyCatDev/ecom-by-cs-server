@@ -253,7 +253,7 @@ router.get("/adminstats", auth, async (req, res) => {
 
       const parsedFromDate = dayjs(fromDate);
       const parsedToDate = dayjs(toDate);
-      const datesDifference = parsedFromDate.diff(parsedToDate, "days");
+      const datesDifference = parsedToDate.diff(parsedFromDate, "days");
       const averageDaily = sumDays / datesDifference;
       console.log({ sumDays });
       console.log({ datesDifference });
