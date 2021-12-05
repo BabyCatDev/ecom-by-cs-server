@@ -248,13 +248,13 @@ router.get("/adminstats", auth, async (req, res) => {
             count: { $sum: 1 }
           }
         },
-        { $group: { _id: null, avg: { $sum: "$count" } } }
+        { $group: { _id: null, sum: { $sum: "$count" } } }
       ]);
-
+      const extractedSumDays = sumDays[0]?.sum || 0;
       const parsedFromDate = dayjs(fromDate);
       const parsedToDate = dayjs(toDate);
       const datesDifference = parsedToDate.diff(parsedFromDate, "days");
-      const averageDaily = sumDays / datesDifference;
+      const averageDaily = extractedSumDays / datesDifference;
       console.log({ sumDays });
       console.log({ datesDifference });
       console.log({ averageDaily });
