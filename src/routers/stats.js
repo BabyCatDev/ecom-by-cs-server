@@ -255,10 +255,7 @@ router.get("/adminstats", auth, async (req, res) => {
       const parsedToDate = dayjs(toDate);
       const datesDifference = parsedToDate.diff(parsedFromDate, "days");
       const averageDaily = extractedSumDays / datesDifference;
-      console.log({ sumDays });
-      console.log({ datesDifference });
-      console.log({ averageDaily });
-      ///////////////////////
+
       const percentageAllDailyDeliveries = await Order.aggregate([
         {
           $match: {
