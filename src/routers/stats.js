@@ -289,6 +289,7 @@ router.get("/adminstats", auth, async (req, res) => {
           }
         }
       ]);
+      console.log({ percentageSuccDailyDeliveries });
       const percentageDailyDeliveriesItems = percentageAllDailyDeliveries.reduce(
         (acc, pa) => {
           let succ = percentageSuccDailyDeliveries.find(
