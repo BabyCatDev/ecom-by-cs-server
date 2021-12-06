@@ -216,6 +216,7 @@ router.patch("/postpone/:id", auth, async (req, res) => {
 
         const parsedDeliveryDay = dayjs(deliveryDate);
         const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
+        console.log({ datesDifference });
         //Creating orderDetails
         const promises = products.map(async (item, i) => {
           const orderTemp = new OrderDetail({
