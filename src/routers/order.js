@@ -198,7 +198,8 @@ router.patch("/postpone/:id", auth, async (req, res) => {
           },
           {
             $set: {
-              postponed: true
+              postponed: true,
+              status: "Failed"
             }
           }
         );
