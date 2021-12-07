@@ -1,6 +1,7 @@
 const express = require("express");
 const Order = require("../models/order");
 const auth = require("../middleware/auth");
+const dayjs = require("dayjs");
 
 const router = new express.Router();
 
@@ -36,14 +37,9 @@ router.get("/deliverystats", auth, async (req, res) => {
           $gte: today,
           $lt: tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).count();
 
       const succeedOrders = await Order.find({
@@ -68,6 +64,9 @@ router.get("/deliverystats", auth, async (req, res) => {
         },
         status: {
           $eq: "Hold"
+        },
+        postponed: {
+          $eq: false
         }
       }).count();
       const stats = { totalOrders, failedOrders, succeedOrders, holdOrders };
@@ -109,14 +108,9 @@ router.get("/sellerstats", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).count();
 
       const succeedOrders = await Order.find({
@@ -232,12 +226,15 @@ router.get("/adminstats", auth, async (req, res) => {
       const fromDate = new Date(req.query.fromDate);
       const toDate = new Date(req.query.toDate);
 
-      const averageDaily = await Order.aggregate([
+      const sumDays = await Order.aggregate([
         {
           $match: {
             createdAt: {
               $gte: req.query.fromDate ? fromDate : today,
               $lt: req.query.toDate ? toDate : tomorrow
+            },
+            postponed: {
+              $eq: false
             }
           }
         },
@@ -247,9 +244,14 @@ router.get("/adminstats", auth, async (req, res) => {
             count: { $sum: 1 }
           }
         },
-        { $group: { _id: null, avg: { $avg: "$count" } } }
+        { $group: { _id: null, sum: { $sum: "$count" } } }
       ]);
-      ///////////////////////
+      const extractedSumDays = sumDays.length > 0 ? sumDays[0].sum : 0;
+      const parsedFromDate = dayjs(fromDate);
+      const parsedToDate = dayjs(toDate);
+      const datesDifference = parsedToDate.diff(parsedFromDate, "days");
+      const averageDaily = extractedSumDays / (datesDifference || 1);
+
       const percentageAllDailyDeliveries = await Order.aggregate([
         {
           $match: {
@@ -315,14 +317,9 @@ router.get("/adminstats", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).count();
 
       const succeedOrders = await Order.find({
@@ -361,14 +358,9 @@ router.get("/adminstats", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }
@@ -389,7 +381,7 @@ router.get("/adminstats", auth, async (req, res) => {
         succeedOrders,
         turnoverRealized,
         failedTurnover,
-        averageDaily: averageDaily.length > 0 ? averageDaily[0].avg : 0,
+        averageDaily: averageDaily,
         percentageDailyDeliveries
       };
       res.status(200).send(stats);
@@ -432,14 +424,9 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).count();
 
       const succeedOrders = await Order.find({
@@ -553,14 +540,9 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).count();
 
       const succeedOrders = await Order.find({
@@ -610,14 +592,9 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }
@@ -716,14 +693,9 @@ router.get("/adminproductstats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }
@@ -825,14 +797,9 @@ router.get("/admincompanystats/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        $or: [
-          {
-            status: "Failed"
-          },
-          {
-            status: "Cancelled"
-          }
-        ]
+        status: {
+          $eq: "Failed"
+        }
       }).populate({
         path: "products",
         populate: { path: "product", model: "Product" }

@@ -183,7 +183,7 @@ router.patch("/postpone/:id", auth, async (req, res) => {
     try {
       const { status, deliveryDate, deliveryFeedback } = req.body;
       const orderId = req.params.id;
-      if (status === "Failed") {
+      if (status === "Failed" || status === "Hold") {
         ////////////////////////////////
         ////GET ORDER WITH POPULATE SUBORDERS
         const oldOrder = await Order.findById(orderId)
@@ -198,8 +198,8 @@ router.patch("/postpone/:id", auth, async (req, res) => {
           },
           {
             $set: {
-              status: "Cancelled",
-              deliveryFeedback: deliveryFeedback
+              postponed: true,
+              status: "Failed"
             }
           }
         );
@@ -217,6 +217,7 @@ router.patch("/postpone/:id", auth, async (req, res) => {
 
         const parsedDeliveryDay = dayjs(deliveryDate);
         const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
+        console.log({ datesDifference });
         //Creating orderDetails
         const promises = products.map(async (item, i) => {
           const orderTemp = new OrderDetail({
@@ -298,6 +299,31 @@ router.patch("/postpone/:id", auth, async (req, res) => {
   }
 });
 
+router.patch("/confirm/:id", auth, async (req, res) => {
+  if (req.user.type === "Commercial") {
+    try {
+      const { deliveryDate } = req.body;
+      const orderId = req.params.id;
+      const order = await Order.updateOne(
+        {
+          _id: orderId
+        },
+        {
+          $set: {
+            status: "Hold",
+            deliveryDate: deliveryDate
+          }
+        }
+      );
+      res.send(order);
+    } catch (e) {
+      res.status(400).send(e);
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
 router.get("/sellerorders", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
     try {
@@ -316,7 +342,9 @@ router.get("/sellerorders", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        status: { $ne: "Reported" }
+        status: {
+          $ne: "Reported"
+        }
       })
         .populate({
           path: "products",
@@ -432,7 +460,9 @@ router.get("/admindeliveryorders/:id", auth, async (req, res) => {
           $gte: req.query.fromDate || today,
           $lt: req.query.toDate || tomorrow
         },
-        status: { $ne: "Reported" }
+        status: {
+          $ne: "Reported"
+        }
       })
         .populate({
           path: "products",
