@@ -344,9 +344,6 @@ router.get("/sellerorders", auth, async (req, res) => {
         },
         status: {
           $ne: "Reported"
-        },
-        postponed: {
-          $eq: false
         }
       })
         .populate({
@@ -420,10 +417,7 @@ router.get("/deliveryorders", auth, async (req, res) => {
           $gte: today,
           $lt: tomorrow
         },
-        status: { $ne: "Reported" },
-        postponed: {
-          $eq: false
-        }
+        status: { $ne: "Reported" }
       })
         .populate({
           path: "products",
