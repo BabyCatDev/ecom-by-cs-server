@@ -462,9 +462,6 @@ router.get("/admindeliveryorders/:id", auth, async (req, res) => {
         },
         status: {
           $ne: "Reported"
-        },
-        postponed: {
-          $eq: false
         }
       })
         .populate({
