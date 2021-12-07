@@ -225,6 +225,7 @@ router.get("/adminstats", auth, async (req, res) => {
       // sum the counts of period
       const fromDate = new Date(req.query.fromDate);
       const toDate = new Date(req.query.toDate);
+
       const sumDays = await Order.aggregate([
         {
           $match: {
