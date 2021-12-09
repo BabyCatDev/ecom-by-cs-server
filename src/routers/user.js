@@ -24,8 +24,11 @@ router.post("/login", async (req, res) => {
       req.body.password
     );
     const token = await user.generateAuthToken();
+    user.notifPushTokens = [...user.notifPushTokens, req.body.pushToken];
+    await user.save();
     res.send({ user, token });
   } catch (e) {
+    console.log(e);
     res.status(400).send(e);
   }
 });
@@ -35,6 +38,9 @@ router.post("/logout", auth, async (req, res) => {
   try {
     req.user.tokens = req.user.tokens.filter(token => {
       return token.token !== req.token;
+    });
+    req.user.notifPushTokens = req.user.notifPushTokens.filter(pushToken => {
+      return pushToken !== req.body.pushToken;
     });
     await req.user.save();
     res.send();
