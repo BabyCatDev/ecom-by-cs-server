@@ -554,9 +554,9 @@ router.patch("/delivery/:id", auth, async (req, res) => {
       const body =
         req.user.fullName +
         (status === "Failed"
-          ? ` couldn't deliver`
+          ? ` n'a pas livré`
           : status === "Succeed"
-          ? ` delivered successfuly`
+          ? ` a livré avec succès`
           : ` no info`);
 
       for (let pushToken of seller.notifPushTokens) {
