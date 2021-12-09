@@ -377,6 +377,9 @@ router.get("/sellerfailedorders", auth, async (req, res) => {
         },
         status: {
           $eq: "Failed"
+        },
+        postponed: {
+          $eq: false
         }
       })
         .populate({
