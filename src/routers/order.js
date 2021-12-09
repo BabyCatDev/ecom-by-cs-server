@@ -548,7 +548,7 @@ router.patch("/delivery/:id", auth, async (req, res) => {
       );
 
       //find the seller
-      const seller = await User.findOne({ _id: seller });
+      const seller = await User.findOne({ _id: req.body.seller });
       //send notifs to his phones
       let messages = [];
       const body =
