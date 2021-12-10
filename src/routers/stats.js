@@ -810,7 +810,6 @@ router.get("/admincompanystats/:id", auth, async (req, res) => {
       );
 
       ///////////////////////////////////////////////////////////////////////
-
       const totalOrdersData = await Order.find({
         deliveryDate: {
           $gte: req.query.fromDate || today,
@@ -827,6 +826,7 @@ router.get("/admincompanystats/:id", auth, async (req, res) => {
           if (pr.company.toString() === companyId) totalOrders++;
         });
       });
+      let percentagePerStore = (totalOrders / totalOrdersData.length) * 100;
       ///////////////////////////////////////////////////////////////////////
 
       const succeedData = await Order.find({
@@ -904,7 +904,8 @@ router.get("/admincompanystats/:id", auth, async (req, res) => {
         succeedOrders,
         holdOrders,
         turnoverRealized,
-        failedTurnover
+        failedTurnover,
+        percentagePerStore
       };
 
       res.status(200).send(stats);
