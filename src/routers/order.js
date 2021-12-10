@@ -325,6 +325,29 @@ router.patch("/confirm/:id", auth, async (req, res) => {
     res.status(403).send();
   }
 });
+router.patch("/reassign/:id", auth, async (req, res) => {
+  if (req.user.type === "Commercial") {
+    try {
+      const { newSeller } = req.body;
+      const orderId = req.params.id;
+      const order = await Order.updateOne(
+        {
+          _id: orderId
+        },
+        {
+          $set: {
+            seller: newSeller
+          }
+        }
+      );
+      res.send(order);
+    } catch (e) {
+      res.status(400).send(e);
+    }
+  } else {
+    res.status(403).send();
+  }
+});
 
 router.get("/sellerorders", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
