@@ -400,9 +400,7 @@ router.get("/sellerfailedorders", auth, async (req, res) => {
         seller: {
           $eq: req.user._id
         },
-        status: {
-          $eq: "Failed"
-        },
+        $or: [{ status: { $eq: "Failed" } }, { price: "Hold" }],
         postponed: {
           $eq: false
         }
