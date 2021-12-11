@@ -336,8 +336,8 @@ router.get("/adminstats", auth, async (req, res) => {
           $group: {
             _id: {
               $dateToString: { format: "%Y-%m-%d", date: "$deliveryDate" }
-            },
-            count: { $sum: 1 }
+            }
+            // count: { $sum: 1 }
           }
         }
       ]);
@@ -357,8 +357,8 @@ router.get("/adminstats", auth, async (req, res) => {
           $group: {
             _id: {
               $dateToString: { format: "%Y-%m-%d", date: "$deliveryDate" }
-            },
-            count: { $sum: 1 }
+            }
+            // count: { $sum: 1 }
           }
         }
       ]);
@@ -372,8 +372,7 @@ router.get("/adminstats", auth, async (req, res) => {
         },
         0
       );
-      const percentageDailyDeliveries =
-        percentageDailyDeliveriesItems / percentageAllDailyDeliveries.length;
+      const percentageDailyDeliveries = percentageDailyDeliveriesItems / 1;
 
       console.log({ percentageDailyDeliveriesItems });
       console.log({
