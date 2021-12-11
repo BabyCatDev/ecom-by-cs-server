@@ -375,6 +375,11 @@ router.get("/adminstats", auth, async (req, res) => {
       const percentageDailyDeliveries =
         percentageDailyDeliveriesItems / percentageAllDailyDeliveries.length;
 
+      console.log({ percentageDailyDeliveriesItems });
+      console.log({
+        percentageAllDailyDeliveries: percentageAllDailyDeliveries.length
+      });
+      console.log({ percentageDailyDeliveries });
       /////////
       const totalOrders = await Order.find({
         deliveryDate: {
