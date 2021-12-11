@@ -284,6 +284,8 @@ router.get("/adminstats", auth, async (req, res) => {
       console.log(req.query.toDate);
       console.log(new Date(req.query.fromDate));
       console.log(new Date(req.query.toDate));
+      console.log(fromDate);
+      console.log(toDate);
       const sumDays = await Order.aggregate([
         {
           $match: {
