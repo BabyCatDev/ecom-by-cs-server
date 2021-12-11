@@ -127,7 +127,7 @@ router.get("/deliverystats", auth, async (req, res) => {
         succeedOrders,
         holdOrders,
         turnoverRealized,
-        failedTurnoverData
+        failedTurnover
       };
       res.status(200).send(stats);
     } catch (e) {
