@@ -324,6 +324,8 @@ router.get("/adminstats", auth, async (req, res) => {
 
       console.log(today);
       console.log(tomorrow);
+      console.log(req.query.fromDate);
+      console.log(req.query.toDate);
       console.log(fromDate);
       console.log(toDate);
       const percentageAllDailyDeliveries = await Order.aggregate([
