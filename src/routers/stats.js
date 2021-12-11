@@ -285,8 +285,8 @@ router.get("/adminstats", auth, async (req, res) => {
         {
           $match: {
             createdAt: {
-              $gte: req.query.fromDate ? fromDate : today,
-              $lt: req.query.toDate ? toDate : tomorrow
+              $gte: req.query.fromDate || today,
+              $lt: req.query.toDate || tomorrow
             },
             postponed: {
               $eq: false
@@ -327,8 +327,8 @@ router.get("/adminstats", auth, async (req, res) => {
         {
           $match: {
             deliveryDate: {
-              $gte: req.query.fromDate ? fromDate : today,
-              $lt: req.query.toDate ? toDate : tomorrow
+              $gte: req.query.fromDate || today,
+              $lt: req.query.toDate || tomorrow
             }
           }
         },
@@ -345,8 +345,8 @@ router.get("/adminstats", auth, async (req, res) => {
         {
           $match: {
             deliveryDate: {
-              $gte: req.query.fromDate ? fromDate : today,
-              $lt: req.query.toDate ? toDate : tomorrow
+              $gte: req.query.fromDate || today,
+              $lt: req.query.toDate || tomorrow
             },
             status: {
               $eq: "Succeed"
