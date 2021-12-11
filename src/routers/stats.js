@@ -322,14 +322,6 @@ router.get("/adminstats", auth, async (req, res) => {
 
       const averageDaily = extractedSumDays / (datesDifference || 1);
 
-      console.log(today);
-      console.log(tomorrow);
-      console.log(req.query.fromDate);
-      console.log(req.query.toDate);
-      console.log(new Date(req.query.fromDate));
-      console.log(new Date(req.query.toDate));
-      console.log(fromDate);
-      console.log(toDate);
       const percentageAllDailyDeliveries = await Order.aggregate([
         {
           $match: {
@@ -381,7 +373,9 @@ router.get("/adminstats", auth, async (req, res) => {
       );
       const percentageDailyDeliveries =
         percentageDailyDeliveriesItems / percentageAllDailyDeliveries.length;
-
+      console.log(percentageAllDailyDeliveries);
+      console.log(percentageSuccDailyDeliveries);
+      console.log(percentageDailyDeliveriesItems);
       /////////
       const totalOrders = await Order.find({
         deliveryDate: {
