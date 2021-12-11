@@ -69,7 +69,66 @@ router.get("/deliverystats", auth, async (req, res) => {
           $eq: false
         }
       }).count();
-      const stats = { totalOrders, failedOrders, succeedOrders, holdOrders };
+      /////////
+      //Realized income
+      const realizedIncomeData = await Order.find({
+        delivery: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $gte: today,
+          $lt: tomorrow
+        },
+        status: {
+          $eq: "Succeed"
+        }
+      }).populate({
+        path: "products",
+        populate: { path: "product", model: "Product" }
+      });
+      const turnoverRealized = realizedIncomeData.reduce(
+        (acc, order) =>
+          acc +
+          order.products.reduce(
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
+            0
+          ),
+        0
+      );
+      //Failed turnover
+      const failedTurnoverData = await Order.find({
+        delivery: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $gte: today,
+          $lt: tomorrow
+        },
+        status: {
+          $eq: "Failed"
+        }
+      }).populate({
+        path: "products",
+        populate: { path: "product", model: "Product" }
+      });
+      const failedTurnover = failedTurnoverData.reduce(
+        (acc, order) =>
+          acc +
+          order.products.reduce(
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
+            0
+          ),
+        0
+      );
+      //////
+      const stats = {
+        totalOrders,
+        failedOrders,
+        succeedOrders,
+        holdOrders,
+        turnoverRealized,
+        failedTurnoverData
+      };
       res.status(200).send(stats);
     } catch (e) {
       console.log(e);
