@@ -372,6 +372,8 @@ router.get("/adminstats", auth, async (req, res) => {
         },
         0
       );
+      console.log(req.query.fromDate);
+      console.log(req.query.toDate);
       console.log({ fromDate });
       console.log({ toDate });
       const percentageDailyDeliveries =
