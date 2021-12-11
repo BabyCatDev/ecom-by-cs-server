@@ -304,7 +304,23 @@ router.get("/adminstats", auth, async (req, res) => {
       const extractedSumDays = sumDays.length > 0 ? sumDays[0].sum : 0;
       const parsedFromDate = dayjs(fromDate);
       const parsedToDate = dayjs(toDate);
-      const datesDifference = parsedToDate.diff(parsedFromDate, "days");
+
+      const dayBefore = new Date(
+        toDate.getFullYear(),
+        toDate.getMonth(),
+        toDate.getDate() - 1
+      );
+      var totalSundays = 0;
+
+      for (var i = fromDate; i <= dayBefore; ) {
+        if (i.getDay() == 0) {
+          totalSundays++;
+        }
+        i.setTime(i.getTime() + 1000 * 60 * 60 * 24);
+      }
+      const datesDifference =
+        parsedToDate.diff(parsedFromDate, "days") - totalSundays;
+
       const averageDaily = extractedSumDays / (datesDifference || 1);
 
       const percentageAllDailyDeliveries = await Order.aggregate([
@@ -359,22 +375,6 @@ router.get("/adminstats", auth, async (req, res) => {
       const percentageDailyDeliveries =
         percentageDailyDeliveriesItems / percentageAllDailyDeliveries.length;
 
-      /////////////
-      const dayBefore = new Date(
-        toDate.getFullYear(),
-        toDate.getMonth(),
-        toDate.getDate() - 1
-      );
-      var totalSundays = 0;
-
-      for (var i = fromDate; i <= dayBefore; ) {
-        if (i.getDay() == 0) {
-          totalSundays++;
-        }
-        i.setTime(i.getTime() + 1000 * 60 * 60 * 24);
-      }
-
-      console.log(totalSundays);
       /////////
       const totalOrders = await Order.find({
         deliveryDate: {
