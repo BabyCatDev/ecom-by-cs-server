@@ -334,8 +334,8 @@ router.get("/adminstats", auth, async (req, res) => {
         {
           $match: {
             deliveryDate: {
-              $gte: req.query.fromDate ? fromDate : today,
-              $lt: req.query.toDate ? toDate : tomorrow
+              $gte: req.query.fromDate ? new Date(req.query.fromDate) : today,
+              $lt: req.query.toDate ? new Date(req.query.toDate) : tomorrow
             }
           }
         },
@@ -352,8 +352,8 @@ router.get("/adminstats", auth, async (req, res) => {
         {
           $match: {
             deliveryDate: {
-              $gte: req.query.fromDate ? fromDate : today,
-              $lt: req.query.toDate ? toDate : tomorrow
+              $gte: req.query.fromDate ? new Date(req.query.fromDate) : today,
+              $lt: req.query.toDate ? new Date(req.query.toDate) : tomorrow
             },
             status: {
               $eq: "Succeed"
