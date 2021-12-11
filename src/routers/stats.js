@@ -280,13 +280,16 @@ router.get("/adminstats", auth, async (req, res) => {
       // sum the counts of period
       const fromDate = new Date(req.query.fromDate);
       const toDate = new Date(req.query.toDate);
-
+      console.log(req.query.fromDate);
+      console.log(req.query.toDate);
+      console.log(new Date(req.query.fromDate));
+      console.log(new Date(req.query.toDate));
       const sumDays = await Order.aggregate([
         {
           $match: {
             createdAt: {
-              $gte: req.query.fromDate || today,
-              $lt: req.query.toDate || tomorrow
+              $gte: req.query.fromDate ? fromDate : today,
+              $lt: req.query.toDate ? toDate : tomorrow
             },
             postponed: {
               $eq: false
@@ -327,8 +330,8 @@ router.get("/adminstats", auth, async (req, res) => {
         {
           $match: {
             deliveryDate: {
-              $gte: req.query.fromDate || today,
-              $lt: req.query.toDate || tomorrow
+              $gte: req.query.fromDate ? fromDate : today,
+              $lt: req.query.toDate ? toDate : tomorrow
             }
           }
         },
@@ -345,8 +348,8 @@ router.get("/adminstats", auth, async (req, res) => {
         {
           $match: {
             deliveryDate: {
-              $gte: req.query.fromDate || today,
-              $lt: req.query.toDate || tomorrow
+              $gte: req.query.fromDate ? fromDate : today,
+              $lt: req.query.toDate ? toDate : tomorrow
             },
             status: {
               $eq: "Succeed"
@@ -372,12 +375,6 @@ router.get("/adminstats", auth, async (req, res) => {
         },
         0
       );
-      console.log(req.query.fromDate);
-      console.log(req.query.toDate);
-      console.log(ISODate(req.query.fromDate));
-      console.log(ISODate(req.query.toDate));
-      console.log({ today });
-      console.log({ tomorrow });
       const percentageDailyDeliveries =
         percentageDailyDeliveriesItems / percentageAllDailyDeliveries.length;
 
