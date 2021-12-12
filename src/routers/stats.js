@@ -864,6 +864,28 @@ router.get("/adminproductstats/:id", auth, async (req, res) => {
       });
 
       //////////////////////////////////////////////////////////////////////
+      //all orders
+      const allOrders = await Order.find({
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        }
+      })
+        .populate({
+          path: "seller"
+        })
+        .populate({
+          path: "products"
+        });
+      const filteredOrders = allOrders.filter(o =>
+        o.products.some(p => p.product.toString() === productId)
+      );
+      const percentageSellers = filteredOrders
+        .flatMap(o => o.seller.fullName)
+        .reduce((total, value) => {
+          total[value] = (total[value] || 0) + 1;
+          return total;
+        }, {});
 
       const stats = {
         totalOrders,
@@ -871,7 +893,8 @@ router.get("/adminproductstats/:id", auth, async (req, res) => {
         succeedOrders,
         holdOrders,
         turnoverRealized,
-        failedTurnover
+        failedTurnover,
+        percentageSellers
       };
 
       res.status(200).send(stats);
