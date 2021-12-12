@@ -398,11 +398,16 @@ router.get("/sellerorders", auth, async (req, res) => {
 router.get("/sellerfailedorders", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
     try {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const orders = await Order.find({
         seller: {
           $eq: req.user._id
         },
-        $or: [{ status: { $eq: "Failed" } }, { price: "Hold" }],
+        deliveryDate: {
+          $lt: today
+        },
+        $or: [{ status: { $eq: "Failed" } }, { $eq: "Hold" }],
         postponed: {
           $eq: false
         }
