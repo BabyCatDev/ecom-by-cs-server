@@ -705,7 +705,7 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
         populate: { path: "company", model: "Company" }
       });
 
-      console.log(allOrders);
+      console.log(allOrders[0].products);
       //Failed turnover
       const failedTurnoverData = await Order.find({
         seller: {
