@@ -1038,7 +1038,7 @@ router.get("/admincompanystats/:id", auth, async (req, res) => {
           return total;
         }, {});
       const percentageProducts = filteredOrders
-        .flatMap(o => o.product.name)
+        .flatMap(o => o.product.product.name)
         .reduce((total, value) => {
           total[value] = (total[value] || 0) + 1;
           return total;
