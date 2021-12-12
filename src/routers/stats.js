@@ -691,6 +691,21 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
           ),
         0
       );
+      //all orders
+      const allOrders = await Order.find({
+        seller: {
+          $eq: userId
+        },
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        }
+      }).populate({
+        path: "products",
+        populate: { path: "company", model: "Company" }
+      });
+
+      console.log(allOrders);
       //Failed turnover
       const failedTurnoverData = await Order.find({
         seller: {
