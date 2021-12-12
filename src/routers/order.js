@@ -98,13 +98,13 @@ router.patch("/order/:id", auth, async (req, res) => {
         comments,
         productsDetails,
         oldProductsIds,
-        oldDelivery
+        oldDelivery,
+        toBeDeletedProducts
       } = req.body;
       const products = [];
 
-      //deleting old orderDetails and create new ones
       ///deleting the old ones
-      // await OrderDetail.deleteMany({ _id: oldProductsIds });
+      await OrderDetail.deleteMany({ _id: toBeDeletedProducts });
 
       ///creting new ones
       const promises = productsDetails.map(async (item, i) => {
