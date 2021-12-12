@@ -691,6 +691,7 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
           ),
         0
       );
+
       //all orders
       const allOrders = await Order.find({
         seller: {
@@ -704,8 +705,13 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
         path: "products",
         populate: { path: "company", model: "Company" }
       });
-
-      console.log(allOrders.map(o => o.products.map(p => p.company.name)));
+      const percentageCompanies = allOrders
+        .flatMap(o => o.products.map(p => p.company.name))
+        .reduce((total, value) => {
+          total[value] = (total[value] || 0) + 1;
+          return total;
+        }, {});
+      console.log(percentageCompanies);
       //Failed turnover
       const failedTurnoverData = await Order.find({
         seller: {
