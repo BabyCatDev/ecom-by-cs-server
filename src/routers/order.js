@@ -407,7 +407,7 @@ router.get("/sellerfailedorders", auth, async (req, res) => {
         deliveryDate: {
           $lt: today
         },
-        $or: [{ status: { $eq: "Failed" } }, { $eq: "Hold" }],
+        $or: [{ status: "Failed" }, { status: "Hold" }],
         postponed: {
           $eq: false
         }
