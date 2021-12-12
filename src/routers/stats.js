@@ -711,7 +711,6 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
           total[value] = (total[value] || 0) + 1;
           return total;
         }, {});
-      console.log(percentageCompanies);
       //Failed turnover
       const failedTurnoverData = await Order.find({
         seller: {
@@ -744,7 +743,8 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
         succeedOrders,
         holdOrders,
         turnoverRealized,
-        failedTurnover
+        failedTurnover,
+        percentageCompanies
       };
       res.status(200).send(stats);
     } catch (e) {
