@@ -944,7 +944,6 @@ router.get("/admincompanystats/:id", auth, async (req, res) => {
           if (pr.company.toString() === companyId) totalOrders++;
         });
       });
-      let percentagePerStore = (totalOrders / totalOrdersData.length) * 100;
       ///////////////////////////////////////////////////////////////////////
 
       const succeedData = await Order.find({
@@ -1015,6 +1014,35 @@ router.get("/admincompanystats/:id", auth, async (req, res) => {
       });
 
       //////////////////////////////////////////////////////////////////////
+      //all orders
+      const allOrders = await Order.find({
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        }
+      })
+        .populate({
+          path: "seller"
+        })
+        .populate({
+          path: "products",
+          populate: { path: "product", model: "Product" }
+        });
+      const filteredOrders = allOrders.filter(o =>
+        o.products.some(p => p.company.toString() === companyId)
+      );
+      const percentageSellers = filteredOrders
+        .flatMap(o => o.seller.fullName)
+        .reduce((total, value) => {
+          total[value] = (total[value] || 0) + 1;
+          return total;
+        }, {});
+      const percentageProducts = filteredOrders
+        .flatMap(o => o.product.name)
+        .reduce((total, value) => {
+          total[value] = (total[value] || 0) + 1;
+          return total;
+        }, {});
 
       const stats = {
         totalOrders,
@@ -1023,7 +1051,8 @@ router.get("/admincompanystats/:id", auth, async (req, res) => {
         holdOrders,
         turnoverRealized,
         failedTurnover,
-        percentagePerStore
+        percentageSellers,
+        percentageProducts
       };
 
       res.status(200).send(stats);
