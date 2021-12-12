@@ -375,6 +375,15 @@ router.get("/adminstats", auth, async (req, res) => {
       const percentageDailyDeliveries =
         percentageDailyDeliveriesItems / (datesDifference || 1);
       /////////
+      const totalEnteredOrders = await Order.find({
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        postponed: {
+          $eq: false
+        }
+      }).count();
       const totalOrders = await Order.find({
         deliveryDate: {
           $gte: req.query.fromDate || today,
@@ -463,7 +472,8 @@ router.get("/adminstats", auth, async (req, res) => {
         turnoverRealized,
         failedTurnover,
         averageDaily: averageDaily,
-        percentageDailyDeliveries
+        percentageDailyDeliveries,
+        totalEnteredOrders
       };
       res.status(200).send(stats);
     } catch (e) {
