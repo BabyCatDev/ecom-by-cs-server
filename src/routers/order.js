@@ -138,6 +138,7 @@ router.patch("/order/:id", auth, async (req, res) => {
             status: datesDifference === 0 ? "Hold" : "Reported",
             products,
             oldProducts: oldProductsIds,
+            updated: true,
             clientName,
             clientPhones,
             clientAddress,
@@ -526,6 +527,10 @@ router.get("/admindeliveryorders/:id", auth, async (req, res) => {
       })
         .populate({
           path: "products",
+          populate: { path: "product", model: "Product" }
+        })
+        .populate({
+          path: "oldProducts",
           populate: { path: "product", model: "Product" }
         })
         .populate({
