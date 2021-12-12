@@ -104,7 +104,7 @@ router.patch("/order/:id", auth, async (req, res) => {
 
       //deleting old orderDetails and create new ones
       ///deleting the old ones
-      await OrderDetail.deleteMany({ _id: oldProductsIds });
+      // await OrderDetail.deleteMany({ _id: oldProductsIds });
 
       ///creting new ones
       const promises = productsDetails.map(async (item, i) => {
@@ -137,6 +137,7 @@ router.patch("/order/:id", auth, async (req, res) => {
           $set: {
             status: datesDifference === 0 ? "Hold" : "Reported",
             products,
+            oldProducts: oldProductsIds,
             clientName,
             clientPhones,
             clientAddress,

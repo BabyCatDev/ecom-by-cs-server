@@ -49,6 +49,13 @@ const orderSchema = new mongoose.Schema(
       ref: "User",
       required: true
     },
+    oldProducts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "OrderDetail",
+        required: true
+      }
+    ],
     products: [
       {
         type: mongoose.Schema.Types.ObjectId,
