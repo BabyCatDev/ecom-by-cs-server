@@ -221,7 +221,7 @@ router.get("/sellerstats", auth, async (req, res) => {
           ),
         0
       );
-      const averageIncome = realizedIncome / totalOrders;
+      // const averageIncome = realizedIncome / totalOrders;
       // //Potential income
       // const potentialIncomeData = await Order.find({
       //   seller: {
@@ -251,7 +251,7 @@ router.get("/sellerstats", auth, async (req, res) => {
         failedOrders,
         succeedOrders,
         holdOrders,
-        averageIncome
+        realizedIncome
       };
       res.status(200).send(stats);
     } catch (e) {
