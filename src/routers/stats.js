@@ -197,31 +197,31 @@ router.get("/sellerstats", auth, async (req, res) => {
         }
       }).count();
       //Realized income
-      // const realizedIncomeData = await Order.find({
-      //   seller: {
-      //     $eq: req.user._id
-      //   },
-      //   deliveryDate: {
-      //     $gte: req.query.fromDate || today,
-      //     $lt: req.query.toDate || tomorrow
-      //   },
-      //   status: {
-      //     $eq: "Succeed"
-      //   }
-      // }).populate({
-      //   path: "products",
-      //   populate: { path: "product", model: "Product" }
-      // });
-      // const realizedIncome = realizedIncomeData.reduce(
-      //   (acc, order) =>
-      //     acc +
-      //     order.products.reduce(
-      //       (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
-      //       0
-      //     ),
-      //   0
-      // );
-      // const averageIncome = realizedIncome / totalOrders;
+      const realizedIncomeData = await Order.find({
+        seller: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        status: {
+          $eq: "Succeed"
+        }
+      }).populate({
+        path: "products",
+        populate: { path: "product", model: "Product" }
+      });
+      const realizedIncome = realizedIncomeData.reduce(
+        (acc, order) =>
+          acc +
+          order.products.reduce(
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
+            0
+          ),
+        0
+      );
+      const averageIncome = realizedIncome / totalOrders;
       // //Potential income
       // const potentialIncomeData = await Order.find({
       //   seller: {
@@ -250,7 +250,8 @@ router.get("/sellerstats", auth, async (req, res) => {
         totalOrders,
         failedOrders,
         succeedOrders,
-        holdOrders
+        holdOrders,
+        averageIncome
       };
       res.status(200).send(stats);
     } catch (e) {
