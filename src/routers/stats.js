@@ -628,6 +628,18 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
         now.getDate() + 1
       );
       const userId = req.params.id;
+      const totalEnteredOrders = await Order.find({
+        seller: {
+          $eq: userId
+        },
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        postponed: {
+          $eq: false
+        }
+      }).count();
       const totalOrders = await Order.find({
         seller: {
           $eq: userId
@@ -755,7 +767,8 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
         holdOrders,
         turnoverRealized,
         failedTurnover,
-        percentageCompanies
+        percentageCompanies,
+        totalEnteredOrders
       };
       res.status(200).send(stats);
     } catch (e) {
@@ -778,6 +791,7 @@ router.get("/adminproductstats/:id", auth, async (req, res) => {
       let holdOrders = 0;
       let turnoverRealized = 0;
       let failedTurnover = 0;
+      let totalEnteredOrders = 0;
 
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -787,6 +801,26 @@ router.get("/adminproductstats/:id", auth, async (req, res) => {
         now.getDate() + 1
       );
 
+      ///////////////////////////////////////////////////////////////////////
+
+      const totalEnteredOrdersData = await Order.find({
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        postponed: {
+          $eq: false
+        }
+      }).populate({
+        path: "products",
+        populate: { path: "product", model: "Product" }
+      });
+
+      totalEnteredOrdersData.forEach((item, i) => {
+        item.products.forEach(pr => {
+          if (pr.product._id.toString() === productId) totalEnteredOrders++;
+        });
+      });
       ///////////////////////////////////////////////////////////////////////
 
       const totalOrdersData = await Order.find({
@@ -905,7 +939,8 @@ router.get("/adminproductstats/:id", auth, async (req, res) => {
         holdOrders,
         turnoverRealized,
         failedTurnover,
-        percentageSellers
+        percentageSellers,
+        totalEnteredOrders
       };
 
       res.status(200).send(stats);
@@ -929,6 +964,7 @@ router.get("/admincompanystats/:id", auth, async (req, res) => {
       let holdOrders = 0;
       let turnoverRealized = 0;
       let failedTurnover = 0;
+      let totalEnteredOrders = 0;
 
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -938,6 +974,24 @@ router.get("/admincompanystats/:id", auth, async (req, res) => {
         now.getDate() + 1
       );
 
+      const totalEnteredOrdersData = await Order.find({
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        },
+        postponed: {
+          $eq: false
+        }
+      }).populate({
+        path: "products",
+        populate: { path: "product", model: "Product" }
+      });
+
+      totalEnteredOrdersData.forEach((item, i) => {
+        item.products.forEach(pr => {
+          if (pr.company.toString() === companyId) totalEnteredOrders++;
+        });
+      });
       ///////////////////////////////////////////////////////////////////////
       const totalOrdersData = await Order.find({
         deliveryDate: {
@@ -1063,7 +1117,8 @@ router.get("/admincompanystats/:id", auth, async (req, res) => {
         turnoverRealized,
         failedTurnover,
         percentageSellers,
-        percentageProducts
+        percentageProducts,
+        totalEnteredOrders
       };
 
       res.status(200).send(stats);
