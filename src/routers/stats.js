@@ -221,37 +221,38 @@ router.get("/sellerstats", auth, async (req, res) => {
           ),
         0
       );
-      // const averageIncome = realizedIncome / totalOrders;
-      // //Potential income
-      // const potentialIncomeData = await Order.find({
-      //   seller: {
-      //     $eq: req.user._id
-      //   },
-      //   deliveryDate: {
-      //     $gte: req.query.fromDate || today,
-      //     $lt: req.query.toDate || tomorrow
-      //   }
-      // }).populate({
-      //   path: "products",
-      //   populate: { path: "product", model: "Product" }
-      // });
-      // const potentialIncome = potentialIncomeData.reduce(
-      //   (acc, order) =>
-      //     acc +
-      //     order.products.reduce(
-      //       (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
-      //       0
-      //     ),
-      //   0
-      // );
-      //
-      // const potentialAverage = potentialIncome / totalOrders;
+      const averageIncome = realizedIncome / totalOrders;
+      //Potential income
+      const potentialIncomeData = await Order.find({
+        seller: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow
+        }
+      }).populate({
+        path: "products",
+        populate: { path: "product", model: "Product" }
+      });
+      const potentialIncome = potentialIncomeData.reduce(
+        (acc, order) =>
+          acc +
+          order.products.reduce(
+            (acc2, pDetail) => acc2 + pDetail.quantity * pDetail.sellingPrice,
+            0
+          ),
+        0
+      );
+
+      const potentialAverage = potentialIncome / totalOrders;
       const stats = {
         totalOrders,
         failedOrders,
         succeedOrders,
         holdOrders,
-        realizedIncome
+        realizedIncome,
+        potentialAverage
       };
       res.status(200).send(stats);
     } catch (e) {
