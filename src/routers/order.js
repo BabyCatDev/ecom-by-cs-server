@@ -119,7 +119,16 @@ router.patch("/order/:id", auth, async (req, res) => {
       await OrderDetail.deleteMany({ _id: toBeDeletedProducts });
 
       //update stock
-      const stockPromises = productsDetails.map(async (item, i) => {
+      const stockPromises = oldProducts.map(async (item, i) => {
+        await Product.updateOne(
+          {
+            _id: item.product._id
+          },
+          { $inc: { stock: item.quantity } }
+        );
+      });
+      await Promise.all(stockPromises);
+      const stockPromises2 = productsDetails.map(async (item, i) => {
         await Product.updateOne(
           {
             _id: item.productId
@@ -127,17 +136,8 @@ router.patch("/order/:id", auth, async (req, res) => {
           { $inc: { stock: -item.quantity } }
         );
       });
-      await Promise.all(stockPromises);
-      //update stock
-      const stockPromises2 = oldProducts.map(async (item, i) => {
-        await Product.updateOne(
-          {
-            _id: item._id
-          },
-          { $inc: { stock: item.quantity } }
-        );
-      });
       await Promise.all(stockPromises2);
+      //update stock
       ///creting new ones
       const promises = productsDetails.map(async (item, i) => {
         const orderTemp = new OrderDetail({
