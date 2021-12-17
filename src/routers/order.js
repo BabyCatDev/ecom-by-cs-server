@@ -124,7 +124,7 @@ router.patch("/order/:id", auth, async (req, res) => {
           {
             _id: item.productId
           },
-          { $inc: { stock: -parseInt(item.quantity) } }
+          { $inc: { stock: -item.quantity } }
         );
       });
       await Promise.all(stockPromises);
@@ -132,9 +132,9 @@ router.patch("/order/:id", auth, async (req, res) => {
       const stockPromises2 = oldProducts.map(async (item, i) => {
         await Product.updateOne(
           {
-            _id: item.productId
+            _id: item._id
           },
-          { $inc: { stock: parseInt(item.quantity) } }
+          { $inc: { stock: item.quantity } }
         );
       });
       await Promise.all(stockPromises2);
