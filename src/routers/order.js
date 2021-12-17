@@ -124,7 +124,7 @@ router.patch("/order/:id", auth, async (req, res) => {
           {
             _id: item.productId
           },
-          { $inc: { stock: -item.quantity } }
+          { $inc: { stock: -parseInt(item.quantity) } }
         );
       });
       await Promise.all(stockPromises);
@@ -134,7 +134,7 @@ router.patch("/order/:id", auth, async (req, res) => {
           {
             _id: item.productId
           },
-          { $inc: { stock: item.quantity } }
+          { $inc: { stock: parseInt(item.quantity) } }
         );
       });
       await Promise.all(stockPromises2);
