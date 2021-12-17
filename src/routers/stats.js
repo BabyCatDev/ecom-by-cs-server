@@ -618,6 +618,9 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
         },
         { $group: { _id: null, sum: { $sum: "$count" } } }
       ]);
+      console.log({ fromDate });
+      console.log({ toDate });
+      console.log({ sumDays });
       const extractedSumDays = sumDays.length > 0 ? sumDays[0].sum : 0;
       const parsedFromDate = dayjs(fromDate);
       const parsedToDate = dayjs(toDate);
