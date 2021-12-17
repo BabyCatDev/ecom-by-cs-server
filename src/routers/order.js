@@ -1,9 +1,12 @@
 const express = require("express");
 const User = require("../models/user");
 const Order = require("../models/order");
+const Product = require("../models/product");
 const OrderDetail = require("../models/orderDetail");
 const auth = require("../middleware/auth");
 const dayjs = require("dayjs");
+const { Expo } = require("expo-server-sdk");
+let expo = new Expo();
 
 const router = new express.Router();
 
@@ -23,6 +26,17 @@ router.post("/order", auth, async (req, res) => {
 
     const parsedDeliveryDay = dayjs(deliveryDate);
     const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
+
+    //update stock
+    const stockPromises = productsDetails.map(async (item, i) => {
+      await Product.updateOne(
+        {
+          _id: item.productId
+        },
+        { $inc: { stock: -item.quantity } }
+      );
+    });
+    await Promise.all(stockPromises);
     //Creating orderDetails
     const promises = productsDetails.map(async (item, i) => {
       const orderTemp = new OrderDetail({
@@ -95,15 +109,35 @@ router.patch("/order/:id", auth, async (req, res) => {
         delivery,
         comments,
         productsDetails,
-        oldProductsIds,
-        oldDelivery
+        oldProducts,
+        oldDelivery,
+        toBeDeletedProducts
       } = req.body;
       const products = [];
 
-      //deleting old orderDetails and create new ones
-      ///deleting the old ones
-      await OrderDetail.deleteMany({ _id: oldProductsIds });
+      ///deleting the very old ones
+      await OrderDetail.deleteMany({ _id: toBeDeletedProducts });
 
+      //update stock
+      const stockPromises = oldProducts.map(async (item, i) => {
+        await Product.updateOne(
+          {
+            _id: item.product._id
+          },
+          { $inc: { stock: item.quantity } }
+        );
+      });
+      await Promise.all(stockPromises);
+      const stockPromises2 = productsDetails.map(async (item, i) => {
+        await Product.updateOne(
+          {
+            _id: item.productId
+          },
+          { $inc: { stock: -item.quantity } }
+        );
+      });
+      await Promise.all(stockPromises2);
+      //update stock
       ///creting new ones
       const promises = productsDetails.map(async (item, i) => {
         const orderTemp = new OrderDetail({
@@ -135,6 +169,8 @@ router.patch("/order/:id", auth, async (req, res) => {
           $set: {
             status: datesDifference === 0 ? "Hold" : "Reported",
             products,
+            oldProducts: oldProducts.map(o => o._id),
+            updated: true,
             clientName,
             clientPhones,
             clientAddress,
@@ -198,8 +234,7 @@ router.patch("/postpone/:id", auth, async (req, res) => {
           },
           {
             $set: {
-              postponed: true,
-              status: "Failed"
+              postponed: true
             }
           }
         );
@@ -217,7 +252,6 @@ router.patch("/postpone/:id", auth, async (req, res) => {
 
         const parsedDeliveryDay = dayjs(deliveryDate);
         const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
-        console.log({ datesDifference });
         //Creating orderDetails
         const promises = products.map(async (item, i) => {
           const orderTemp = new OrderDetail({
@@ -323,6 +357,29 @@ router.patch("/confirm/:id", auth, async (req, res) => {
     res.status(403).send();
   }
 });
+router.patch("/reassign/:id", auth, async (req, res) => {
+  if (req.user.type === "Commercial") {
+    try {
+      const { newSeller } = req.body;
+      const orderId = req.params.id;
+      const order = await Order.updateOne(
+        {
+          _id: orderId
+        },
+        {
+          $set: {
+            seller: newSeller
+          }
+        }
+      );
+      res.send(order);
+    } catch (e) {
+      res.status(400).send(e);
+    }
+  } else {
+    res.status(403).send();
+  }
+});
 
 router.get("/sellerorders", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
@@ -344,6 +401,45 @@ router.get("/sellerorders", auth, async (req, res) => {
         },
         status: {
           $ne: "Reported"
+        }
+      })
+        .populate({
+          path: "products",
+          populate: { path: "product", model: "Product" }
+        })
+        .populate({
+          path: "delivery",
+          select: "fullName phones email place"
+        })
+        .sort({ createdAt: -1 });
+      if (!orders) {
+        return res.status(404).send();
+      }
+      res.send(orders);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send();
+    }
+  } else {
+    res.status(403).send();
+  }
+});
+
+router.get("/sellerfailedorders", auth, async (req, res) => {
+  if (req.user.type === "Commercial") {
+    try {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const orders = await Order.find({
+        seller: {
+          $eq: req.user._id
+        },
+        deliveryDate: {
+          $lt: today
+        },
+        $or: [{ status: "Failed" }, { status: "Hold" }],
+        postponed: {
+          $eq: false
         }
       })
         .populate({
@@ -469,6 +565,10 @@ router.get("/admindeliveryorders/:id", auth, async (req, res) => {
           populate: { path: "product", model: "Product" }
         })
         .populate({
+          path: "oldProducts",
+          populate: { path: "product", model: "Product" }
+        })
+        .populate({
           path: "seller",
           select: "fullName phones email place"
         })
@@ -508,8 +608,48 @@ router.patch("/delivery/:id", auth, async (req, res) => {
           }
         }
       );
+
+      //find the seller
+      const seller = await User.findOne({ _id: req.body.seller });
+      //send notifs to his phones
+      let messages = [];
+      const body =
+        req.user.fullName +
+        (status === "Failed"
+          ? ` n'a pas livré`
+          : status === "Succeed"
+          ? ` a livré avec succès`
+          : ` no info`);
+
+      for (let pushToken of seller.notifPushTokens) {
+        if (!Expo.isExpoPushToken(pushToken)) {
+          console.error(
+            `Push token ${pushToken} is not a valid Expo push token`
+          );
+          continue;
+        }
+        messages.push({
+          to: pushToken,
+          sound: "default",
+          body
+        });
+      }
+      let chunks = expo.chunkPushNotifications(messages);
+      let tickets = [];
+      (async () => {
+        for (let chunk of chunks) {
+          try {
+            let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+            console.log(ticketChunk);
+            tickets.push(...ticketChunk);
+          } catch (error) {
+            console.error(error);
+          }
+        }
+      })();
       res.send(order);
     } catch (e) {
+      console.log(e);
       res.status(400).send(e);
     }
   } else {

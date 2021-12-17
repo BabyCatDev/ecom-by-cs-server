@@ -39,6 +39,10 @@ const orderSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    updated: {
+      type: Boolean,
+      default: false
+    },
     delivery: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -49,6 +53,13 @@ const orderSchema = new mongoose.Schema(
       ref: "User",
       required: true
     },
+    oldProducts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "OrderDetail",
+        required: true
+      }
+    ],
     products: [
       {
         type: mongoose.Schema.Types.ObjectId,

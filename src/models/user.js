@@ -62,6 +62,7 @@ const userSchema = new mongoose.Schema(
         ref: "Order"
       }
     ],
+    notifPushTokens: [],
     tokens: [
       {
         token: {
