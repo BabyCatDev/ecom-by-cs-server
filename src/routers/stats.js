@@ -2,7 +2,8 @@ const express = require("express");
 const Order = require("../models/order");
 const auth = require("../middleware/auth");
 const dayjs = require("dayjs");
-
+const mongoose = require("mongoose");
+const ObjectId = mongoose.Types.ObjectId;
 const router = new express.Router();
 
 //delivery guy stats
@@ -599,7 +600,7 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
         {
           $match: {
             delivery: {
-              $eq: userId
+              $eq: new mongoose.Types.ObjectId(userId)
             },
             createdAt: {
               $gte: req.query.fromDate ? fromDate : today,
@@ -618,9 +619,7 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
         },
         { $group: { _id: null, sum: { $sum: "$count" } } }
       ]);
-      console.log({ fromDate });
-      console.log({ toDate });
-      console.log({ sumDays });
+
       const extractedSumDays = sumDays.length > 0 ? sumDays[0].sum : 0;
       const parsedFromDate = dayjs(fromDate);
       const parsedToDate = dayjs(toDate);
