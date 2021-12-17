@@ -635,6 +635,66 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
         getTotalSundays(fromDate, dayBefore);
 
       const averageDaily = extractedSumDays / (datesDifference || 1);
+
+      ///////
+      const percentageAllDailyDeliveries = await Order.aggregate([
+        {
+          $match: {
+            delivery: {
+              $eq: new mongoose.Types.ObjectId(userId)
+            },
+            deliveryDate: {
+              $gte: req.query.fromDate ? new Date(req.query.fromDate) : today,
+              $lt: req.query.toDate ? new Date(req.query.toDate) : tomorrow
+            }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: "%Y-%m-%d", date: "$deliveryDate" }
+            },
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+      const percentageSuccDailyDeliveries = await Order.aggregate([
+        {
+          $match: {
+            delivery: {
+              $eq: new mongoose.Types.ObjectId(userId)
+            },
+            deliveryDate: {
+              $gte: req.query.fromDate ? new Date(req.query.fromDate) : today,
+              $lt: req.query.toDate ? new Date(req.query.toDate) : tomorrow
+            },
+            status: {
+              $eq: "Succeed"
+            }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: "%Y-%m-%d", date: "$deliveryDate" }
+            },
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+      const percentageDailyDeliveriesItems = percentageAllDailyDeliveries.reduce(
+        (acc, pa) => {
+          let succ = percentageSuccDailyDeliveries.find(
+            ps => ps._id.toString() === pa._id.toString()
+          );
+          const succVal = succ || { count: 0 };
+          return (succVal.count / pa.count) * 100 + acc;
+        },
+        0
+      );
+
+      const percentageDailyDeliveries =
+        percentageDailyDeliveriesItems / (datesDifference || 1);
       const stats = {
         totalOrders,
         failedOrders,
@@ -642,7 +702,8 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
         holdOrders,
         turnoverRealized,
         failedTurnover,
-        averageDaily
+        averageDaily,
+        percentageDailyDeliveries
       };
       res.status(200).send(stats);
     } catch (e) {
@@ -837,6 +898,67 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
         getTotalSundays(fromDate, dayBefore);
 
       const averageDaily = extractedSumDays / (datesDifference || 1);
+
+      //////////
+
+      const percentageAllDailyDeliveries = await Order.aggregate([
+        {
+          $match: {
+            seller: {
+              $eq: new mongoose.Types.ObjectId(userId)
+            },
+            deliveryDate: {
+              $gte: req.query.fromDate ? new Date(req.query.fromDate) : today,
+              $lt: req.query.toDate ? new Date(req.query.toDate) : tomorrow
+            }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: "%Y-%m-%d", date: "$deliveryDate" }
+            },
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+      const percentageSuccDailyDeliveries = await Order.aggregate([
+        {
+          $match: {
+            seller: {
+              $eq: new mongoose.Types.ObjectId(userId)
+            },
+            deliveryDate: {
+              $gte: req.query.fromDate ? new Date(req.query.fromDate) : today,
+              $lt: req.query.toDate ? new Date(req.query.toDate) : tomorrow
+            },
+            status: {
+              $eq: "Succeed"
+            }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: "%Y-%m-%d", date: "$deliveryDate" }
+            },
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+      const percentageDailyDeliveriesItems = percentageAllDailyDeliveries.reduce(
+        (acc, pa) => {
+          let succ = percentageSuccDailyDeliveries.find(
+            ps => ps._id.toString() === pa._id.toString()
+          );
+          const succVal = succ || { count: 0 };
+          return (succVal.count / pa.count) * 100 + acc;
+        },
+        0
+      );
+
+      const percentageDailyDeliveries =
+        percentageDailyDeliveriesItems / (datesDifference || 1);
       const stats = {
         totalOrders,
         failedOrders,
@@ -846,7 +968,8 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
         failedTurnover,
         percentageCompanies,
         totalEnteredOrders,
-        averageDaily
+        averageDaily,
+        percentageDailyDeliveries
       };
       res.status(200).send(stats);
     } catch (e) {
