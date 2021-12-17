@@ -692,9 +692,9 @@ router.get("/admindeliverystats/:id", auth, async (req, res) => {
         },
         0
       );
-
+      console.log(percentageAllDailyDeliveries);
       const percentageDailyDeliveries =
-        percentageDailyDeliveriesItems / (datesDifference || 1);
+        percentageDailyDeliveriesItems / percentageAllDailyDeliveries.length;
       const stats = {
         totalOrders,
         failedOrders,
@@ -958,7 +958,7 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
       );
 
       const percentageDailyDeliveries =
-        percentageDailyDeliveriesItems / (datesDifference || 1);
+        percentageDailyDeliveriesItems / percentageAllDailyDeliveries.length;
       const stats = {
         totalOrders,
         failedOrders,
