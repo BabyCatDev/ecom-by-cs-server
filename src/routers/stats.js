@@ -796,7 +796,47 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
           ),
         0
       );
+      const fromDate = new Date(req.query.fromDate);
+      const toDate = new Date(req.query.toDate);
+      const sumDays = await Order.aggregate([
+        {
+          $match: {
+            seller: {
+              $eq: new mongoose.Types.ObjectId(userId)
+            },
+            createdAt: {
+              $gte: req.query.fromDate ? fromDate : today,
+              $lt: req.query.toDate ? toDate : tomorrow
+            },
+            postponed: {
+              $eq: false
+            }
+          }
+        },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 }
+          }
+        },
+        { $group: { _id: null, sum: { $sum: "$count" } } }
+      ]);
 
+      const extractedSumDays = sumDays.length > 0 ? sumDays[0].sum : 0;
+      const parsedFromDate = dayjs(fromDate);
+      const parsedToDate = dayjs(toDate);
+
+      const dayBefore = new Date(
+        toDate.getFullYear(),
+        toDate.getMonth(),
+        toDate.getDate() - 1
+      );
+
+      const datesDifference =
+        parsedToDate.diff(parsedFromDate, "days") -
+        getTotalSundays(fromDate, dayBefore);
+
+      const averageDaily = extractedSumDays / (datesDifference || 1);
       const stats = {
         totalOrders,
         failedOrders,
@@ -805,7 +845,8 @@ router.get("/adminsellerstats/:id", auth, async (req, res) => {
         turnoverRealized,
         failedTurnover,
         percentageCompanies,
-        totalEnteredOrders
+        totalEnteredOrders,
+        averageDaily
       };
       res.status(200).send(stats);
     } catch (e) {
