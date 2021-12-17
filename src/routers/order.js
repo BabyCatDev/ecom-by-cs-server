@@ -1,6 +1,7 @@
 const express = require("express");
 const User = require("../models/user");
 const Order = require("../models/order");
+const Product = require("../models/product");
 const OrderDetail = require("../models/orderDetail");
 const auth = require("../middleware/auth");
 const dayjs = require("dayjs");
@@ -25,6 +26,17 @@ router.post("/order", auth, async (req, res) => {
 
     const parsedDeliveryDay = dayjs(deliveryDate);
     const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
+
+    //update stock
+    const stockPromises = productsDetails.map(async (item, i) => {
+      await Product.updateOne(
+        {
+          _id: item.productId
+        },
+        { $inc: { stock: -item.quantity } }
+      );
+    });
+    await Promise.all(stockPromises);
     //Creating orderDetails
     const promises = productsDetails.map(async (item, i) => {
       const orderTemp = new OrderDetail({
@@ -97,15 +109,35 @@ router.patch("/order/:id", auth, async (req, res) => {
         delivery,
         comments,
         productsDetails,
-        oldProductsIds,
+        oldProducts,
         oldDelivery,
         toBeDeletedProducts
       } = req.body;
       const products = [];
 
-      ///deleting the old ones
+      ///deleting the very old ones
       await OrderDetail.deleteMany({ _id: toBeDeletedProducts });
 
+      //update stock
+      const stockPromises = productsDetails.map(async (item, i) => {
+        await Product.updateOne(
+          {
+            _id: item.productId
+          },
+          { $inc: { stock: -item.quantity } }
+        );
+      });
+      await Promise.all(stockPromises);
+      //update stock
+      const stockPromises2 = oldProducts.map(async (item, i) => {
+        await Product.updateOne(
+          {
+            _id: item.productId
+          },
+          { $inc: { stock: item.quantity } }
+        );
+      });
+      await Promise.all(stockPromises2);
       ///creting new ones
       const promises = productsDetails.map(async (item, i) => {
         const orderTemp = new OrderDetail({
@@ -137,7 +169,7 @@ router.patch("/order/:id", auth, async (req, res) => {
           $set: {
             status: datesDifference === 0 ? "Hold" : "Reported",
             products,
-            oldProducts: oldProductsIds,
+            oldProducts: oldProducts.map(o => o._id),
             updated: true,
             clientName,
             clientPhones,
