@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 require("./db/mongoose");
 const app = express();
+require('dotenv').config()
 //RESTFUL API
 const userRouter = require("./routers/user");
 const companyRouter = require("./routers/company");

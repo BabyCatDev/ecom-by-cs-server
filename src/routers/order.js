@@ -2,8 +2,10 @@ const express = require("express");
 const User = require("../models/user");
 const Order = require("../models/order");
 const Product = require("../models/product");
+const Config = require("../models/config");
 const OrderDetail = require("../models/orderDetail");
 const auth = require("../middleware/auth");
+const adminMw = require("../middleware/admin");
 const dayjs = require("dayjs");
 const { Expo } = require("expo-server-sdk");
 let expo = new Expo();
@@ -20,7 +22,7 @@ router.post("/order", auth, async (req, res) => {
       deliveryDate,
       delivery,
       productsDetails,
-      comments
+      comments,
     } = req.body;
     const products = [];
 
@@ -31,7 +33,7 @@ router.post("/order", auth, async (req, res) => {
     const stockPromises = productsDetails.map(async (item, i) => {
       await Product.updateOne(
         {
-          _id: item.productId
+          _id: item.productId,
         },
         { $inc: { stock: -item.quantity } }
       );
@@ -43,7 +45,7 @@ router.post("/order", auth, async (req, res) => {
         product: item.productId,
         quantity: item.quantity,
         company: item.companyId,
-        sellingPrice: item.price
+        sellingPrice: item.price,
       });
 
       try {
@@ -64,28 +66,65 @@ router.post("/order", auth, async (req, res) => {
       delivery,
       comments,
       status: datesDifference === 0 ? "Hold" : "Reported",
-      seller: req.user._id
+      seller: req.user._id,
     });
+
+    const ordersConfig = await Config.findOne({
+      id: 1,
+    });
+
+    if (ordersConfig) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1
+      );
+      const ordersCount = await Order.find({
+        delivery: {
+          $eq: delivery,
+        },
+        deliveryDate: {
+          $gte: today,
+          $lt: tomorrow,
+        },
+        status: {
+          $eq: "Hold",
+        },
+        postponed: {
+          $eq: false,
+        },
+      }).count();
+
+      console.log({ ordersCount, ordersConfig });
+
+      if (ordersCount >= ordersConfig.orderLimit) {
+        res.status(400).send("ORDER_LIMIT_REACHED");
+        return;
+      }
+    }
+
     try {
       const result = await order.save();
       await User.updateOne(
         {
-          _id: delivery
+          _id: delivery,
         },
         {
           $addToSet: {
-            orders: result._id
-          }
+            orders: result._id,
+          },
         }
       );
       await User.updateOne(
         {
-          _id: req.user._id
+          _id: req.user._id,
         },
         {
           $addToSet: {
-            orders: result._id
-          }
+            orders: result._id,
+          },
         }
       );
       res.status(201).send({ result });
@@ -96,6 +135,7 @@ router.post("/order", auth, async (req, res) => {
     res.status(403).send();
   }
 });
+
 //update order
 router.patch("/order/:id", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
@@ -111,7 +151,7 @@ router.patch("/order/:id", auth, async (req, res) => {
         productsDetails,
         oldProducts,
         oldDelivery,
-        toBeDeletedProducts
+        toBeDeletedProducts,
       } = req.body;
       const products = [];
 
@@ -122,7 +162,7 @@ router.patch("/order/:id", auth, async (req, res) => {
       const stockPromises = oldProducts.map(async (item, i) => {
         await Product.updateOne(
           {
-            _id: item.product._id
+            _id: item.product._id,
           },
           { $inc: { stock: item.quantity } }
         );
@@ -131,7 +171,7 @@ router.patch("/order/:id", auth, async (req, res) => {
       const stockPromises2 = productsDetails.map(async (item, i) => {
         await Product.updateOne(
           {
-            _id: item.productId
+            _id: item.productId,
           },
           { $inc: { stock: -item.quantity } }
         );
@@ -144,7 +184,7 @@ router.patch("/order/:id", auth, async (req, res) => {
           product: item.productId,
           quantity: item.quantity,
           company: item.companyId,
-          sellingPrice: item.price
+          sellingPrice: item.price,
         });
 
         try {
@@ -163,42 +203,42 @@ router.patch("/order/:id", auth, async (req, res) => {
       const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
       const order = await Order.updateOne(
         {
-          _id: orderId
+          _id: orderId,
         },
         {
           $set: {
             status: datesDifference === 0 ? "Hold" : "Reported",
             products,
-            oldProducts: oldProducts.map(o => o._id),
+            oldProducts: oldProducts.map((o) => o._id),
             updated: true,
             clientName,
             clientPhones,
             clientAddress,
             deliveryDate,
             delivery,
-            comments
-          }
+            comments,
+          },
         }
       );
       if (oldDelivery !== delivery) {
         await User.updateOne(
           {
-            _id: oldDelivery
+            _id: oldDelivery,
           },
           {
             $pull: {
-              orders: orderId
-            }
+              orders: orderId,
+            },
           }
         );
         await User.updateOne(
           {
-            _id: delivery
+            _id: delivery,
           },
           {
             $addToSet: {
-              orders: orderId
-            }
+              orders: orderId,
+            },
           }
         );
       }
@@ -224,18 +264,18 @@ router.patch("/postpone/:id", auth, async (req, res) => {
         ////GET ORDER WITH POPULATE SUBORDERS
         const oldOrder = await Order.findById(orderId)
           .populate({
-            path: "products"
+            path: "products",
           })
           .exec();
         ////UPDATE THAT ORDER
         const updateOrder = await Order.updateOne(
           {
-            _id: orderId
+            _id: orderId,
           },
           {
             $set: {
-              postponed: true
-            }
+              postponed: true,
+            },
           }
         );
 
@@ -246,7 +286,7 @@ router.patch("/postpone/:id", auth, async (req, res) => {
           clientAddress,
           delivery,
           products,
-          comments
+          comments,
         } = oldOrder;
         const productsItems = [];
 
@@ -258,7 +298,7 @@ router.patch("/postpone/:id", auth, async (req, res) => {
             product: item.product,
             quantity: item.quantity,
             company: item.company,
-            sellingPrice: item.sellingPrice
+            sellingPrice: item.sellingPrice,
           });
 
           try {
@@ -279,28 +319,28 @@ router.patch("/postpone/:id", auth, async (req, res) => {
           delivery,
           comments,
           status: datesDifference === 0 ? "Hold" : "Reported",
-          seller: req.user._id
+          seller: req.user._id,
         });
         try {
           const result = await order.save();
           await User.updateOne(
             {
-              _id: delivery
+              _id: delivery,
             },
             {
               $addToSet: {
-                orders: result._id
-              }
+                orders: result._id,
+              },
             }
           );
           await User.updateOne(
             {
-              _id: req.user._id
+              _id: req.user._id,
             },
             {
               $addToSet: {
-                orders: result._id
-              }
+                orders: result._id,
+              },
             }
           );
           res.status(201).send({ result });
@@ -313,14 +353,14 @@ router.patch("/postpone/:id", auth, async (req, res) => {
         const datesDifference = parsedDeliveryDay.diff(new Date(), "days");
         const order = await Order.updateOne(
           {
-            _id: orderId
+            _id: orderId,
           },
           {
             $set: {
               status: datesDifference === 0 ? "Hold" : "Reported",
               deliveryDate: deliveryDate,
-              deliveryFeedback: deliveryFeedback
-            }
+              deliveryFeedback: deliveryFeedback,
+            },
           }
         );
         res.send(order);
@@ -340,13 +380,13 @@ router.patch("/confirm/:id", auth, async (req, res) => {
       const orderId = req.params.id;
       const order = await Order.updateOne(
         {
-          _id: orderId
+          _id: orderId,
         },
         {
           $set: {
             status: "Hold",
-            deliveryDate: deliveryDate
-          }
+            deliveryDate: deliveryDate,
+          },
         }
       );
       res.send(order);
@@ -364,12 +404,12 @@ router.patch("/reassign/:id", auth, async (req, res) => {
       const orderId = req.params.id;
       const order = await Order.updateOne(
         {
-          _id: orderId
+          _id: orderId,
         },
         {
           $set: {
-            seller: newSeller
-          }
+            seller: newSeller,
+          },
         }
       );
       res.send(order);
@@ -393,23 +433,23 @@ router.get("/sellerorders", auth, async (req, res) => {
       );
       const orders = await Order.find({
         seller: {
-          $eq: req.user._id
+          $eq: req.user._id,
         },
         deliveryDate: {
           $gte: req.query.fromDate || today,
-          $lt: req.query.toDate || tomorrow
+          $lt: req.query.toDate || tomorrow,
         },
         status: {
-          $ne: "Reported"
-        }
+          $ne: "Reported",
+        },
       })
         .populate({
           path: "products",
-          populate: { path: "product", model: "Product" }
+          populate: { path: "product", model: "Product" },
         })
         .populate({
           path: "delivery",
-          select: "fullName phones email place"
+          select: "fullName phones email place",
         })
         .sort({ createdAt: -1 });
       if (!orders) {
@@ -425,6 +465,42 @@ router.get("/sellerorders", auth, async (req, res) => {
   }
 });
 
+router.get("/adminorders", auth, adminMw, async (req, res) => {
+  try {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1
+    );
+    const orders = await Order.find({
+      deliveryDate: {
+        $gte: req.query.fromDate || today,
+        $lt: req.query.toDate || tomorrow,
+      },
+      status: {
+        $ne: "Reported",
+      },
+    })
+      .populate({
+        path: "products",
+        populate: { path: "product", model: "Product" },
+      })
+      .populate({
+        path: "delivery",
+        select: "fullName phones email place",
+      })
+      .sort({ createdAt: -1 });
+    if (!orders) {
+      return res.status(404).send();
+    }
+    res.send(orders);
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
 router.get("/sellerfailedorders", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
     try {
@@ -432,23 +508,23 @@ router.get("/sellerfailedorders", auth, async (req, res) => {
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const orders = await Order.find({
         seller: {
-          $eq: req.user._id
+          $eq: req.user._id,
         },
         deliveryDate: {
-          $lt: today
+          $lt: today,
         },
         $or: [{ status: "Failed" }, { status: "Hold" }],
         postponed: {
-          $eq: false
-        }
+          $eq: false,
+        },
       })
         .populate({
           path: "products",
-          populate: { path: "product", model: "Product" }
+          populate: { path: "product", model: "Product" },
         })
         .populate({
           path: "delivery",
-          select: "fullName phones email place"
+          select: "fullName phones email place",
         })
         .sort({ createdAt: -1 });
       if (!orders) {
@@ -469,17 +545,17 @@ router.get("/sellerreports", auth, async (req, res) => {
     try {
       const orders = await Order.find({
         seller: {
-          $eq: req.user._id
+          $eq: req.user._id,
         },
-        status: { $eq: "Reported" }
+        status: { $eq: "Reported" },
       })
         .populate({
           path: "products",
-          populate: { path: "product", model: "Product" }
+          populate: { path: "product", model: "Product" },
         })
         .populate({
           path: "delivery",
-          select: "fullName phones email place"
+          select: "fullName phones email place",
         })
         .sort({ createdAt: -1 });
       if (!orders) {
@@ -507,21 +583,21 @@ router.get("/deliveryorders", auth, async (req, res) => {
       );
       const orders = await Order.find({
         delivery: {
-          $eq: req.user._id
+          $eq: req.user._id,
         },
         deliveryDate: {
           $gte: today,
-          $lt: tomorrow
+          $lt: tomorrow,
         },
-        status: { $ne: "Reported" }
+        status: { $ne: "Reported" },
       })
         .populate({
           path: "products",
-          populate: { path: "product", model: "Product" }
+          populate: { path: "product", model: "Product" },
         })
         .populate({
           path: "seller",
-          select: "fullName phones email place"
+          select: "fullName phones email place",
         })
         .sort({ createdAt: -1 });
       if (!orders) {
@@ -550,31 +626,31 @@ router.get("/admindeliveryorders/:id", auth, async (req, res) => {
       );
       const orders = await Order.find({
         delivery: {
-          $eq: deliveryId
+          $eq: deliveryId,
         },
         deliveryDate: {
           $gte: req.query.fromDate || today,
-          $lt: req.query.toDate || tomorrow
+          $lt: req.query.toDate || tomorrow,
         },
         status: {
-          $ne: "Reported"
-        }
+          $ne: "Reported",
+        },
       })
         .populate({
           path: "products",
-          populate: { path: "product", model: "Product" }
+          populate: { path: "product", model: "Product" },
         })
         .populate({
           path: "oldProducts",
-          populate: { path: "product", model: "Product" }
+          populate: { path: "product", model: "Product" },
         })
         .populate({
           path: "seller",
-          select: "fullName phones email place"
+          select: "fullName phones email place",
         })
         .populate({
           path: "delivery",
-          select: "fullName phones email place"
+          select: "fullName phones email place",
         })
         .sort({ createdAt: -1 });
       if (!orders) {
@@ -591,7 +667,6 @@ router.get("/admindeliveryorders/:id", auth, async (req, res) => {
 });
 
 //delivery guy feedback for an order, if it's delivery or failed
-
 router.patch("/delivery/:id", auth, async (req, res) => {
   if (req.user.type === "Livreur") {
     try {
@@ -599,13 +674,13 @@ router.patch("/delivery/:id", auth, async (req, res) => {
       const orderId = req.params.id;
       const order = await Order.updateOne(
         {
-          _id: orderId
+          _id: orderId,
         },
         {
           $set: {
             status: status,
-            deliveryFeedback: deliveryFeedback
-          }
+            deliveryFeedback: deliveryFeedback,
+          },
         }
       );
 
@@ -631,7 +706,7 @@ router.patch("/delivery/:id", auth, async (req, res) => {
         messages.push({
           to: pushToken,
           sound: "default",
-          body
+          body,
         });
       }
       let chunks = expo.chunkPushNotifications(messages);
@@ -654,6 +729,69 @@ router.patch("/delivery/:id", auth, async (req, res) => {
     }
   } else {
     res.status(403).send();
+  }
+});
+
+// Add or update order config (limit order and weekly goal).
+router.post("/order/config", auth, adminMw, async (req, res) => {
+  const {
+    orderLimit,
+    weeklyOrdersGoal,
+    weeklyIncomeGoal,
+    daylyOrdersGoal,
+    daylyIncomeGoal,
+  } = req.body;
+
+  try {
+    let orderConfig = await Config.findOne({
+      id: 1,
+    });
+
+    if (!orderConfig) {
+      orderConfig = new Config({
+        id: 1,
+        orderLimit,
+        weeklyOrdersGoal,
+        weeklyIncomeGoal,
+        daylyOrdersGoal,
+        daylyIncomeGoal,
+      });
+
+      orderConfig = await orderConfig.save();
+    } else {
+      orderConfig = await Config.findOneAndUpdate(
+        {
+          id: 1,
+        },
+        {
+          orderLimit,
+          weeklyOrdersGoal,
+          weeklyIncomeGoal,
+          daylyOrdersGoal,
+          daylyIncomeGoal,
+        },
+        {
+          new: true,
+        }
+      );
+    }
+
+    return res.status(200).json(orderConfig);
+  } catch (error) {
+    res.status(400).send(e);
+  }
+});
+
+// get configuration.
+router.get("/order/config", auth, async (req, res) => {
+  try {
+    let orderConfig = await Config.findOne({
+      id: 1,
+    });
+
+    return res.status(200).json(orderConfig);
+  } catch (error) {
+    return res.status(404).send();
   }
 });
 
