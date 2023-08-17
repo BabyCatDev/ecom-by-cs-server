@@ -543,11 +543,24 @@ router.get("/sellerfailedorders", auth, async (req, res) => {
 router.get("/sellerreports", auth, async (req, res) => {
   if (req.user.type === "Commercial") {
     try {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1
+      );
+      console.log(req.query.fromDate);
+      console.log(req.query.toDate);
       const orders = await Order.find({
         seller: {
           $eq: req.user._id,
         },
-        status: { $eq: "Reported" },
+        deliveryDate: {
+          $gte: req.query.fromDate || today,
+          $lt: req.query.toDate || tomorrow,
+        },
+        status: { $ne: "Reported" },
       })
         .populate({
           path: "products",

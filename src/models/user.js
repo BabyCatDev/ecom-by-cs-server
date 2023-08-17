@@ -2,31 +2,31 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-require('dotenv').config()
+require("dotenv").config();
 
 const userSchema = new mongoose.Schema(
   {
     fullName: {
       type: String,
       required: true,
-      max: 40
+      max: 40,
     },
     username: {
       type: String,
       required: true,
       lowercase: true,
       unique: true,
-      max: 20
+      max: 20,
     },
     phones: [
       {
         type: String,
-        max: 20
-      }
+        max: 20,
+      },
     ],
     place: {
       type: String,
-      max: 150
+      max: 150,
     },
     email: {
       type: String,
@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema(
         if (!validator.isEmail(value)) {
           throw new Error("Email is Invalid");
         }
-      }
+      },
     },
     password: {
       type: String,
@@ -49,35 +49,35 @@ const userSchema = new mongoose.Schema(
         if (value.toLowerCase().includes("password")) {
           throw new Error('Password cannot contain "Password" !');
         }
-      }
+      },
     },
     type: {
       type: String,
       default: "online",
       required: true,
-      trim: true
+      trim: true,
     },
     orders: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Order"
-      }
+        ref: "Order",
+      },
     ],
     notifPushTokens: [],
     tokens: [
       {
         token: {
           type: String,
-          required: true
-        }
-      }
-    ]
+          required: true,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );
 
 //Hash the plain text password before saving
-userSchema.pre("save", async function(next) {
+userSchema.pre("save", async function (next) {
   const user = this;
 
   if (user.isModified("password")) {
@@ -88,11 +88,11 @@ userSchema.pre("save", async function(next) {
 });
 
 //generate token
-userSchema.methods.generateAuthToken = async function() {
+userSchema.methods.generateAuthToken = async function () {
   const user = this;
   const token = jwt.sign(
     {
-      _id: user._id.toString()
+      _id: user._id.toString(),
     },
     process.env.JWT_SECRET
   );
@@ -106,6 +106,7 @@ userSchema.methods.generateAuthToken = async function() {
 //Login username - password
 userSchema.statics.findByCredentials = async (username, password) => {
   const user = await User.findOne({ username: username });
+  console.log(user);
   if (!user) {
     throw new Error("Unable to Login");
   }
@@ -118,7 +119,7 @@ userSchema.statics.findByCredentials = async (username, password) => {
 };
 
 //getPublicProfile
-userSchema.methods.toJSON = function() {
+userSchema.methods.toJSON = function () {
   const user = this; //user value gettin' its value from this
   const userObject = user.toObject();
 
